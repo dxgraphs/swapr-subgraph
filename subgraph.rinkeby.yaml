@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: Factory
-    network: mainnet
+    network: rinkeby
     source:
-      address: '0xd34971bab6e5e356fd250715f5de0492bb070452'
+      address: '0x02f45e773436C6D96Cc73600fe94a660ec67734C'
       abi: Factory
-      startBlock: 10000000
+      startBlock: 7553048
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -31,10 +31,30 @@ dataSources:
       eventHandlers:
         - event: PairCreated(indexed address,indexed address,address,uint256)
           handler: handleNewPair
+  - kind: ethereum/contract
+    name: StakingRewardsFactory
+    network: rinkeby
+    source:
+      address: '0x021Eedd456F872c952B1E58670aaD7DF4C5693f2'
+      abi: StakingRewardsFactory
+      startBlock: 7996955
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/staking-rewards.ts
+      entities:
+        - Distribution
+      abis:
+        - name: StakingRewardsFactory
+          file: ./abis/staking-rewards-factory.json
+      eventHandlers:
+        - event: DistributionCreated(address,address)
+          handler: handleDistributionCreation
 templates:
   - kind: ethereum/contract
     name: Pair
-    network: mainnet
+    network: rinkeby
     source:
       abi: Pair
     mapping:
@@ -61,3 +81,34 @@ templates:
           handler: handleTransfer
         - event: Sync(uint112,uint112)
           handler: handleSync
+  - kind: ethereum/contract
+    name: Distribution
+    network: rinkeby
+    source:
+      abi: StakingRewardsDistribution
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/staking-rewards.ts
+      entities:
+        - Deposit
+        - Withdrawal
+        - Claim
+        - Recovery
+      abis:
+        - name: StakingRewardsDistribution
+          file: ./abis/staking-rewards-distribution.json
+      eventHandlers:
+        - event: Initialized(address[],address,uint256[],uint64,uint64,bool)
+          handler: handleDistributionInitialization
+        - event: Canceled()
+          handler: handleCancelation
+        - event: Staked(indexed address,uint256)
+          handler: handleDeposit
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawal
+        - event: Claimed(indexed address,uint256[])
+          handler: handleClaim
+        - event: Recovered(uint256[])
+          handler: handleRecovery

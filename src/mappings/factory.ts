@@ -4,7 +4,6 @@ import { SwaprFactory, Pair, Token, Bundle } from '../types/schema'
 import { PairCreated } from '../types/Factory/Factory'
 import { Pair as PairTemplate } from '../types/templates'
 import {
-  FACTORY_ADDRESS,
   ZERO_BD,
   ZERO_BI,
   fetchTokenSymbol,
@@ -12,12 +11,14 @@ import {
   fetchTokenDecimals,
   fetchTokenTotalSupply
 } from './helpers'
+import { getFactoryAddress } from '../commons/addresses'
 
 export function handleNewPair(event: PairCreated): void {
   // load factory (create if first exchange)
-  let factory = SwaprFactory.load(FACTORY_ADDRESS)
+  let factoryAddress = getFactoryAddress()
+  let factory = SwaprFactory.load(factoryAddress)
   if (factory === null) {
-    factory = new SwaprFactory(FACTORY_ADDRESS)
+    factory = new SwaprFactory(factoryAddress)
     factory.pairCount = 0
     factory.totalVolumeETH = ZERO_BD
     factory.totalLiquidityETH = ZERO_BD

@@ -16,7 +16,6 @@ import { getEthPriceInUSD, findEthPerToken, getTrackedVolumeUSD, getTrackedLiqui
 import {
   convertTokenToDecimal,
   ADDRESS_ZERO,
-  FACTORY_ADDRESS,
   ONE_BI,
   createUser,
   createLiquidityPosition,
@@ -24,6 +23,7 @@ import {
   BI_18,
   createLiquiditySnapshot
 } from './helpers'
+import { getFactoryAddress } from '../commons/addresses'
 
 function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId).sender !== null // sufficient checks
@@ -35,7 +35,7 @@ export function handleTransfer(event: Transfer): void {
     return
   }
 
-  let factory = SwaprFactory.load(FACTORY_ADDRESS)
+  let factory = SwaprFactory.load(getFactoryAddress())
   let transactionHash = event.transaction.hash.toHexString()
 
   // user stats
@@ -214,7 +214,7 @@ export function handleSync(event: Sync): void {
   let pair = Pair.load(event.address.toHex())
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
   swapr.totalLiquidityETH = swapr.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
@@ -281,7 +281,7 @@ export function handleMint(event: Mint): void {
   let mint = MintEvent.load(mints[mints.length - 1])
 
   let pair = Pair.load(event.address.toHex())
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
 
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
@@ -342,7 +342,7 @@ export function handleBurn(event: Burn): void {
   let burn = BurnEvent.load(burns[burns.length - 1])
 
   let pair = Pair.load(event.address.toHex())
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
 
   //update token info
   let token0 = Token.load(pair.token0)
@@ -448,7 +448,7 @@ export function handleSwap(event: Swap): void {
   pair.save()
 
   // update global values, only used tracked amounts for volume
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
   swapr.totalVolumeUSD = swapr.totalVolumeUSD.plus(trackedAmountUSD)
   swapr.totalVolumeETH = swapr.totalVolumeETH.plus(trackedAmountETH)
   swapr.untrackedVolumeUSD = swapr.untrackedVolumeUSD.plus(derivedAmountUSD)

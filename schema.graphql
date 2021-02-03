@@ -294,3 +294,82 @@ type TokenDayData @entity {
   # price stats
   priceUSD: BigDecimal!
 }
+
+# Staking rewards distribution factory
+type SwaprStakingRewardsFactory @entity {
+  # factory address
+  id: ID!
+  initializedDistributionsCount: Int!
+}
+
+type DistributionReward @entity {
+  # reward token address
+  id: ID!
+  token: Token!
+  amount: BigDecimal!
+  distribution: Distribution!
+}
+
+# Staking rewards distribution
+type Distribution @entity {
+  # distribution address
+  id: ID!
+  initialized: Boolean!
+  owner: Bytes!
+  startsAt: BigInt!
+  endsAt: BigInt!
+  duration: BigInt!
+  locked: Boolean!
+  stakablePair: Pair!
+  rewards: [DistributionReward!]! @derivedFrom(field: "distribution")
+  stakedAmount: BigDecimal!
+  deposits: [Deposit!]! @derivedFrom(field: "distribution")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "distribution")
+  claims: [Claim!]! @derivedFrom(field: "distribution")
+  recoveries: [Recovery!]! @derivedFrom(field: "distribution")
+  aggregatedData: AggregatedToken0DistributionData!
+}
+
+# Aggregating info about distributions around by each pair's token 0
+type AggregatedToken0DistributionData @entity {
+  # token 0 id in related pair
+  id: ID!
+  token0: Token!
+  numberOfDistributions: Int!
+  distributions: [Distribution!]! @derivedFrom(field: "aggregatedData")
+}
+
+# LP tokens staking
+type Deposit @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  distribution: Distribution!
+  amount: BigDecimal!
+}
+
+# LP tokens withdrawing
+type Withdrawal @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  distribution: Distribution!
+  amount: BigDecimal!
+}
+
+# Reward tokens claiming
+type Claim @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  distribution: Distribution!
+  amounts: [BigDecimal!]!
+}
+
+# Reward tokens recovery from distribution owner
+type Recovery @entity {
+  id: ID!
+  timestamp: BigInt!
+  distribution: Distribution!
+  amounts: [BigDecimal!]!
+}

@@ -1,13 +1,21 @@
 /* eslint-disable prefer-const */
-import { log, BigInt, BigDecimal, Address, EthereumEvent } from '@graphprotocol/graph-ts'
+import { log, BigInt, BigDecimal, Address, ethereum } from '@graphprotocol/graph-ts'
 import { ERC20 } from '../types/Factory/ERC20'
 import { ERC20SymbolBytes } from '../types/Factory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../types/Factory/ERC20NameBytes'
-import { User, Bundle, Token, LiquidityPosition, LiquidityPositionSnapshot, Pair } from '../types/schema'
+import {
+  User,
+  Bundle,
+  Token,
+  LiquidityPosition,
+  LiquidityPositionSnapshot,
+  Pair,
+  AggregatedToken0DistributionData
+} from '../types/schema'
 import { Factory as FactoryContract } from '../types/templates/Pair/Factory'
+import { getFactoryAddress } from '../commons/addresses'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
-export const FACTORY_ADDRESS = '0xd34971bab6e5e356fd250715f5de0492bb070452'
 
 export let ZERO_BI = BigInt.fromI32(0)
 export let ONE_BI = BigInt.fromI32(1)
@@ -15,7 +23,7 @@ export let ZERO_BD = BigDecimal.fromString('0')
 export let ONE_BD = BigDecimal.fromString('1')
 export let BI_18 = BigInt.fromI32(18)
 
-export let factoryContract = FactoryContract.bind(Address.fromString(FACTORY_ADDRESS))
+export let factoryContract = FactoryContract.bind(Address.fromString(getFactoryAddress()))
 
 export function exponentToBigDecimal(decimals: BigInt): BigDecimal {
   let bd = BigDecimal.fromString('1')
@@ -168,7 +176,7 @@ export function createUser(address: Address): void {
   }
 }
 
-export function createLiquiditySnapshot(position: LiquidityPosition, event: EthereumEvent): void {
+export function createLiquiditySnapshot(position: LiquidityPosition, event: ethereum.Event): void {
   let timestamp = event.block.timestamp.toI32()
   let bundle = Bundle.load('1')
   let pair = Pair.load(position.pair)
@@ -192,4 +200,15 @@ export function createLiquiditySnapshot(position: LiquidityPosition, event: Ethe
   snapshot.liquidityPosition = position.id
   snapshot.save()
   position.save()
+}
+
+export function getOrCreateAggregatedToken0DistributionData(token0: Token): AggregatedToken0DistributionData {
+  let aggregatedDistributionData = AggregatedToken0DistributionData.load(token0.id)
+  if (aggregatedDistributionData === null) {
+    aggregatedDistributionData = new AggregatedToken0DistributionData(token0.id)
+    aggregatedDistributionData.token0 = token0.id
+    aggregatedDistributionData.numberOfDistributions = ZERO_BI.toI32()
+    aggregatedDistributionData.save()
+  }
+  return aggregatedDistributionData as AggregatedToken0DistributionData
 }
