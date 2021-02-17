@@ -143,20 +143,17 @@ export function handleDistributionCancelation(event: Canceled): void {
 
 export function handleDeposit(event: Staked): void {
   let distribution = Distribution.load(event.address.toHexString())
-  distribution.stakedAmount = distribution.stakedAmount.plus(
-    convertTokenToDecimal(event.params.amount, BI_18) // lp tokens have hardcoded 18 decimals
-  )
+  let stakedAmount = convertTokenToDecimal(event.params.amount, BI_18) // lp tokens have hardcoded 18 decimals
+  distribution.stakedAmount = distribution.stakedAmount.plus(stakedAmount)
 
-  // populating the stake depoist entity
+  // populating the stake deposit entity
   let deposit = new Deposit(event.transaction.hash.toHexString())
+  deposit.distribution = distribution.id
   deposit.user = event.params.staker
   deposit.timestamp = event.block.timestamp
   deposit.distribution = distribution.id
-  deposit.amount = convertTokenToDecimal(event.params.amount, BI_18)
+  deposit.amount = stakedAmount
   deposit.save()
-
-  distribution.deposits.push(deposit.id)
-  distribution.save()
 }
 
 export function handleWithdrawal(event: Withdrawn): void {
@@ -167,14 +164,12 @@ export function handleWithdrawal(event: Withdrawn): void {
 
   // populating the withdrawal entity
   let withdrawal = new Withdrawal(event.transaction.hash.toHexString())
+  withdrawal.distribution = distribution.id
   withdrawal.user = event.params.withdrawer
   withdrawal.timestamp = event.block.timestamp
   withdrawal.distribution = distribution.id
   withdrawal.amount = convertTokenToDecimal(event.params.amount, BI_18)
   withdrawal.save()
-
-  distribution.withdrawals.push(withdrawal.id)
-  distribution.save()
 }
 
 export function handleClaim(event: Claimed): void {
@@ -182,6 +177,7 @@ export function handleClaim(event: Claimed): void {
 
   // populating the claim entity
   let claim = new Claim(event.transaction.hash.toHexString())
+  claim.distribution = distribution.id
   claim.user = event.params.claimer
   claim.timestamp = event.block.timestamp
   claim.distribution = distribution.id
@@ -198,9 +194,6 @@ export function handleClaim(event: Claimed): void {
     )
   }
   claim.save()
-
-  distribution.claims.push(claim.id)
-  distribution.save()
 }
 
 export function handleRecovery(event: Recovered): void {
@@ -208,6 +201,7 @@ export function handleRecovery(event: Recovered): void {
 
   // populating the recovery entity
   let recovery = new Recovery(event.transaction.hash.toHexString())
+  recovery.distribution = distribution.id
   recovery.timestamp = event.block.timestamp
   recovery.distribution = distribution.id
   let loadedDistributionRewards = new Array<DistributionReward>()
@@ -222,7 +216,4 @@ export function handleRecovery(event: Recovered): void {
     )
   }
   recovery.save()
-
-  distribution.recoveries.push(recovery.id)
-  distribution.save()
 }
