@@ -328,16 +328,6 @@ type Distribution @entity {
   withdrawals: [Withdrawal!]! @derivedFrom(field: "distribution")
   claims: [Claim!]! @derivedFrom(field: "distribution")
   recoveries: [Recovery!]! @derivedFrom(field: "distribution")
-  aggregatedData: AggregatedToken0DistributionData!
-}
-
-# Aggregating info about distributions around by each pair's token 0
-type AggregatedToken0DistributionData @entity {
-  # token 0 id in related pair
-  id: ID!
-  token0: Token!
-  numberOfDistributions: Int!
-  distributions: [Distribution!]! @derivedFrom(field: "aggregatedData")
 }
 
 # LP tokens staking

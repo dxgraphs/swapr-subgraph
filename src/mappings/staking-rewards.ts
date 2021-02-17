@@ -24,7 +24,6 @@ import {
 import {
   convertTokenToDecimal,
   ZERO_BD,
-  getOrCreateAggregatedToken0DistributionData,
   BI_18,
   fetchTokenSymbol,
   fetchTokenName,
@@ -123,11 +122,6 @@ export function handleDistributionInitialization(event: Initialized): void {
     log.error('could not get token 0 for stakable pair', [])
     return
   }
-  let aggregatedDistributionData = getOrCreateAggregatedToken0DistributionData(token0 as Token)
-  aggregatedDistributionData.numberOfDistributions = aggregatedDistributionData.numberOfDistributions + 1
-  aggregatedDistributionData.save()
-
-  distribution.aggregatedData = aggregatedDistributionData.id
   distribution.save()
 }
 
@@ -145,23 +139,6 @@ export function handleDistributionCancelation(event: Canceled): void {
   let canceledDistribution = Distribution.load(event.address.toHexString())
   canceledDistribution.initialized = false
   canceledDistribution.save()
-
-  // updating aggregated distribution data
-  let stakablePair = Pair.load(canceledDistribution.stakablePair)
-  let token0 = Token.load(stakablePair.token0)
-  if (token0 === null) {
-    // bail if token0 is null
-    log.error('could not get token 0 for stakable pair', [])
-    return
-  }
-  let aggregatedDistributionData = getOrCreateAggregatedToken0DistributionData(token0 as Token)
-  // untrack distribution from aggregated data if currently tracked
-  let indexOfCanceledDistribution = aggregatedDistributionData.distributions.indexOf(canceledDistribution.id)
-  if (indexOfCanceledDistribution >= 0) {
-    aggregatedDistributionData.distributions.splice(indexOfCanceledDistribution, 1)
-    aggregatedDistributionData.numberOfDistributions = aggregatedDistributionData.numberOfDistributions - 1
-  }
-  aggregatedDistributionData.save()
 }
 
 export function handleDeposit(event: Staked): void {

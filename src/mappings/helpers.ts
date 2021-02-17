@@ -3,15 +3,7 @@ import { log, BigInt, BigDecimal, Address, ethereum } from '@graphprotocol/graph
 import { ERC20 } from '../types/Factory/ERC20'
 import { ERC20SymbolBytes } from '../types/Factory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../types/Factory/ERC20NameBytes'
-import {
-  User,
-  Bundle,
-  Token,
-  LiquidityPosition,
-  LiquidityPositionSnapshot,
-  Pair,
-  AggregatedToken0DistributionData
-} from '../types/schema'
+import { User, Bundle, Token, LiquidityPosition, LiquidityPositionSnapshot, Pair } from '../types/schema'
 import { Factory as FactoryContract } from '../types/templates/Pair/Factory'
 import { getFactoryAddress } from '../commons/addresses'
 
@@ -200,15 +192,4 @@ export function createLiquiditySnapshot(position: LiquidityPosition, event: ethe
   snapshot.liquidityPosition = position.id
   snapshot.save()
   position.save()
-}
-
-export function getOrCreateAggregatedToken0DistributionData(token0: Token): AggregatedToken0DistributionData {
-  let aggregatedDistributionData = AggregatedToken0DistributionData.load(token0.id)
-  if (aggregatedDistributionData === null) {
-    aggregatedDistributionData = new AggregatedToken0DistributionData(token0.id)
-    aggregatedDistributionData.token0 = token0.id
-    aggregatedDistributionData.numberOfDistributions = ZERO_BI.toI32()
-    aggregatedDistributionData.save()
-  }
-  return aggregatedDistributionData as AggregatedToken0DistributionData
 }
