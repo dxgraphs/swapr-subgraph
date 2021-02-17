@@ -4,12 +4,14 @@
   "repository": "https://github.com/nicoelzer/swapr-subgraph",
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "codegen": "graph codegen --output-dir src/types/",
-    "build": "graph build",
+    "codegen:mainnet": "graph codegen --output-dir src/types/",
+    "codegen:rinkeby": "graph codegen subgraph.rinkeby.yaml --output-dir src/types/",
+    "build:mainnet": "graph build",
+    "build:rinkeby": "graph build subgraph.rinkeby.yaml",
     "create-local": "graph create nicoelzer/swapr --node http://127.0.0.1:8020",
     "deploy-local:rinkeby": "graph deploy nicoelzer/swapr subgraph.rinkeby.yaml --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "deploy-local:mainnet": "graph deploy nicoelzer/swapr subgraph.rinkeby.yaml --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "deploy": "graph deploy luzzif/swapr_rinkeby subgraph.rinkeby.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug"
+    "deploy:rinkeby": "graph deploy luzzif/swapr_rinkeby subgraph.rinkeby.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.19.0",
