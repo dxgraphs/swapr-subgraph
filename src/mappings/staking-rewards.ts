@@ -5,7 +5,6 @@ import {
   Pair,
   Token,
   Distribution,
-  DistributionReward,
   Deposit,
   Withdrawal,
   Claim,
@@ -43,9 +42,10 @@ export function handleDistributionCreation(event: DistributionCreated): void {
 
 export function handleDistributionInitialization(event: Initialized): void {
   // load factory (create if first distribution)
-  let factory = SwaprStakingRewardsFactory.load(getStakingRewardsFactoryAddress())
+  let stakingRewardsFactoryAddress = getStakingRewardsFactoryAddress()
+  let factory = SwaprStakingRewardsFactory.load(stakingRewardsFactoryAddress)
   if (factory === null) {
-    factory = new SwaprStakingRewardsFactory(getStakingRewardsFactoryAddress())
+    factory = new SwaprStakingRewardsFactory(stakingRewardsFactoryAddress)
     factory.initializedDistributionsCount = 0
   }
   factory.initializedDistributionsCount = factory.initializedDistributionsCount + 1
@@ -69,6 +69,8 @@ export function handleDistributionInitialization(event: Initialized): void {
   let distribution = Distribution.load(hexDistributionAddress)
   if (distribution === null) {
     distribution = new Distribution(hexDistributionAddress)
+    distribution.rewardTokens = []
+    distribution.rewardAmounts = []
   }
   distribution.owner = Bytes.fromHexString(context.getString('owner')) as Bytes
   distribution.startsAt = event.params.startingTimestamp
@@ -77,7 +79,6 @@ export function handleDistributionInitialization(event: Initialized): void {
   distribution.duration = duration
   distribution.locked = event.params.locked
   distribution.stakablePair = stakablePair.id
-  let rewards = new Array<DistributionReward>()
   let rewardTokenAddresses = event.params.rewardsTokenAddresses
   let rewardAmounts = event.params.rewardsAmounts
   for (let index = 0; index < rewardTokenAddresses.length; index++) {
@@ -104,24 +105,11 @@ export function handleDistributionInitialization(event: Initialized): void {
       rewardToken.txCount = ZERO_BI
       rewardToken.save()
     }
-
-    let reward = new DistributionReward(hexTokenAddress)
-    reward.token = rewardToken.id
-    reward.amount = convertTokenToDecimal(rewardAmounts[index], rewardToken.decimals)
-    reward.distribution = distribution.id
-    reward.save()
-    rewards.push(reward)
+    distribution.rewardAmounts.push(convertTokenToDecimal(rewardAmounts[index], rewardToken.decimals))
+    distribution.rewardTokens.push(rewardToken.id)
   }
   distribution.stakedAmount = ZERO_BD
   distribution.initialized = true
-
-  // updating distribution per token 0 in pair
-  let token0 = Token.load(stakablePair.token0)
-  if (token0 === null) {
-    // bail if token0 is null
-    log.error('could not get token 0 for stakable pair', [])
-    return
-  }
   distribution.save()
 }
 
@@ -177,21 +165,17 @@ export function handleClaim(event: Claimed): void {
 
   // populating the claim entity
   let claim = new Claim(event.transaction.hash.toHexString())
+  claim.amounts = []
   claim.distribution = distribution.id
   claim.user = event.params.claimer
   claim.timestamp = event.block.timestamp
   claim.distribution = distribution.id
-  let distributionRewards = distribution.rewards
-  let loadedDistributionRewards = new Array<DistributionReward>()
-  for (let i = 0; i < distribution.rewards.length; i++) {
-    loadedDistributionRewards.push(DistributionReward.load(distributionRewards[i]) as DistributionReward)
-  }
-
+  
+  let distributionRewardTokens = distribution.rewardTokens
   let claimedAmounts = event.params.amounts
-  for (let i = 0; i < claimedAmounts.length; i++) {
-    claim.amounts.push(
-      convertTokenToDecimal(claimedAmounts[i], Token.load(loadedDistributionRewards[i].token).decimals)
-    )
+  for (let i = 0; i < distributionRewardTokens.length; i++) {
+    let token = Token.load(distributionRewardTokens[i]) as Token
+    claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
   }
   claim.save()
 }
@@ -201,19 +185,16 @@ export function handleRecovery(event: Recovered): void {
 
   // populating the recovery entity
   let recovery = new Recovery(event.transaction.hash.toHexString())
+  recovery.amounts = []
   recovery.distribution = distribution.id
   recovery.timestamp = event.block.timestamp
   recovery.distribution = distribution.id
-  let loadedDistributionRewards = new Array<DistributionReward>()
-  let distributionRewards = distribution.rewards
-  for (let i = 0; i < distribution.rewards.length; i++) {
-    loadedDistributionRewards.push(DistributionReward.load(distributionRewards[i]) as DistributionReward)
-  }
+
+  let distributionRewardTokens = distribution.rewardTokens
   let recoveredAmounts = event.params.amounts
-  for (let i = 0; i < recoveredAmounts.length; i++) {
-    recovery.amounts.push(
-      convertTokenToDecimal(recoveredAmounts[i], Token.load(loadedDistributionRewards[i].token).decimals)
-    )
+  for (let i = 0; i < distributionRewardTokens.length; i++) {
+    let token = Token.load(distributionRewardTokens[i]) as Token
+    recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
   }
   recovery.save()
 }

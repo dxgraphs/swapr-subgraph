@@ -303,14 +303,6 @@ type SwaprStakingRewardsFactory @entity {
   initializedDistributionsCount: Int!
 }
 
-type DistributionReward @entity {
-  # reward token address
-  id: ID!
-  token: Token!
-  amount: BigDecimal!
-  distribution: Distribution!
-}
-
 # Staking rewards distribution
 type Distribution @entity {
   # distribution address
@@ -322,7 +314,8 @@ type Distribution @entity {
   duration: BigInt!
   locked: Boolean!
   stakablePair: Pair!
-  rewards: [DistributionReward!]! @derivedFrom(field: "distribution")
+  rewardTokens: [Token!]!
+  rewardAmounts: [BigDecimal!]!
   stakedAmount: BigDecimal!
   deposits: [Deposit!]! @derivedFrom(field: "distribution")
   withdrawals: [Withdrawal!]! @derivedFrom(field: "distribution")
