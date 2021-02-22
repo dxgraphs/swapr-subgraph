@@ -35,7 +35,7 @@ dataSources:
     name: StakingRewardsFactory
     network: rinkeby
     source:
-      address: '0x6549A32e37Dc87056D5AaF42d586Fcf4D1685C9d'
+      address: '0x2b2cbfC3F2D26789F224a65a5A0Fc2854EB8f0A1'
       abi: StakingRewardsFactory
       startBlock: 8088775
     mapping:
