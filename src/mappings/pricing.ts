@@ -3,6 +3,7 @@ import { Pair, Token, Bundle } from '../types/schema'
 import { BigDecimal, Address, BigInt } from '@graphprotocol/graph-ts/index'
 import { ZERO_BD, factoryContract, ADDRESS_ZERO, ONE_BD } from './helpers'
 import { getDaiWethPair, getUsdcWethPair, getUsdtWethPair, getWethAddress, getWhitelist } from '../commons/addresses'
+import { getMinimumLiquidityThresholdEth, getMinimumUsdThresholdForNewPairs } from '../commons/pricing'
 
 export function getEthPriceInUSD(): BigDecimal {
   // fetch eth prices for each stablecoin
@@ -34,12 +35,6 @@ export function getEthPriceInUSD(): BigDecimal {
   }
 }
 
-// minimum liquidity required to count towards tracked volume for pairs with small # of Lps
-let MINIMUM_USD_THRESHOLD_NEW_PAIRS = BigDecimal.fromString('1000')
-
-// minimum liquidity for price to get tracked
-let MINIMUM_LIQUIDITY_THRESHOLD_ETH = BigDecimal.fromString('1')
-
 /**
  * Search through graph to find derived Eth per token.
  * @todo update to be derived ETH (add stablecoin estimates)
@@ -54,11 +49,11 @@ export function findEthPerToken(token: Token): BigDecimal {
     let pairAddress = factoryContract.getPair(Address.fromString(token.id), Address.fromString(whitelist[i]))
     if (pairAddress.toHexString() != ADDRESS_ZERO) {
       let pair = Pair.load(pairAddress.toHexString())
-      if (pair.token0 == token.id && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
+      if (pair.token0 == token.id && pair.reserveETH.gt(getMinimumLiquidityThresholdEth())) {
         let token1 = Token.load(pair.token1)
         return pair.token1Price.times(token1.derivedETH as BigDecimal) // return token1 per our token * Eth per token 1
       }
-      if (pair.token1 == token.id && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
+      if (pair.token1 == token.id && pair.reserveETH.gt(getMinimumLiquidityThresholdEth())) {
         let token0 = Token.load(pair.token0)
         return pair.token0Price.times(token0.derivedETH as BigDecimal) // return token0 per our token * ETH per token 0
       }
@@ -90,17 +85,17 @@ export function getTrackedVolumeUSD(
     let reserve0USD = pair.reserve0.times(price0)
     let reserve1USD = pair.reserve1.times(price1)
     if (whitelist.includes(token0.id) && whitelist.includes(token1.id)) {
-      if (reserve0USD.plus(reserve1USD).lt(MINIMUM_USD_THRESHOLD_NEW_PAIRS)) {
+      if (reserve0USD.plus(reserve1USD).lt(getMinimumUsdThresholdForNewPairs())) {
         return ZERO_BD
       }
     }
     if (whitelist.includes(token0.id) && !whitelist.includes(token1.id)) {
-      if (reserve0USD.times(BigDecimal.fromString('2')).lt(MINIMUM_USD_THRESHOLD_NEW_PAIRS)) {
+      if (reserve0USD.times(BigDecimal.fromString('2')).lt(getMinimumUsdThresholdForNewPairs())) {
         return ZERO_BD
       }
     }
     if (!whitelist.includes(token0.id) && whitelist.includes(token1.id)) {
-      if (reserve1USD.times(BigDecimal.fromString('2')).lt(MINIMUM_USD_THRESHOLD_NEW_PAIRS)) {
+      if (reserve1USD.times(BigDecimal.fromString('2')).lt(getMinimumUsdThresholdForNewPairs())) {
         return ZERO_BD
       }
     }

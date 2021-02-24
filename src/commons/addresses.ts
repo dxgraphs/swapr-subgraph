@@ -20,7 +20,7 @@ export function getStakingRewardsFactoryAddress(): string {
 }
 
 const MAINNET_WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-const RINKEBY_WETH_ADDRESS = '0xc778417E063141139Fce010982780140Aa0cD5Ab'
+const RINKEBY_WETH_ADDRESS = '0xc778417e063141139fce010982780140aa0cd5ab'
 
 export function getWethAddress(): string {
   return dataSource.network() == 'rinkeby' ? RINKEBY_WETH_ADDRESS : MAINNET_WETH_ADDRESS
@@ -51,8 +51,8 @@ let MAINNET_WHITELIST: string[] = [
   '0xd533a949740bb3306d119cc777fa900ba034cd52' // CRV
 ]
 let RINKEBY_WHITELIST: string[] = [
-  '0x554898A0BF98aB0C03ff86C7DccBE29269cc4d29', // DXD
-  '0xc778417E063141139Fce010982780140Aa0cD5Ab' // WETH
+  '0x554898a0bf98ab0c03ff86c7dccbe29269cc4d29', // DXD
+  '0xc778417e063141139fce010982780140aa0cd5ab' // WETH
 ]
 
 export function getWhitelist(): string[] {
@@ -60,7 +60,7 @@ export function getWhitelist(): string[] {
 }
 
 const MAINNET_USDC_WETH_PAIR = '0x98f29f527c8e0ecc67a3c2d5567833bee01f2a12'
-const RINKEBY_USDC_WETH_PAIR = ADDRESS_ZERO
+const RINKEBY_USDC_WETH_PAIR = '0xf3a261b601cd965cd18a5618c436a899c9abed51'
 
 export function getUsdcWethPair(): string {
   return dataSource.network() == 'rinkeby' ? RINKEBY_USDC_WETH_PAIR : MAINNET_USDC_WETH_PAIR

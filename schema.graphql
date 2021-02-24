@@ -300,12 +300,12 @@ type TokenDayData @entity {
 type SwaprStakingRewardsFactory @entity {
   # factory address
   id: ID!
-  initializedDistributionsCount: Int!
+  initializedCampaignsCount: Int!
 }
 
-# Staking rewards distribution
-type Distribution @entity {
-  # distribution address
+# Liquidity mining campaign
+type LiquidityMiningCampaign @entity {
+  # campaign address
   id: ID!
   initialized: Boolean!
   owner: Bytes!
@@ -317,10 +317,10 @@ type Distribution @entity {
   rewardTokens: [Token!]!
   rewardAmounts: [BigDecimal!]!
   stakedAmount: BigDecimal!
-  deposits: [Deposit!]! @derivedFrom(field: "distribution")
-  withdrawals: [Withdrawal!]! @derivedFrom(field: "distribution")
-  claims: [Claim!]! @derivedFrom(field: "distribution")
-  recoveries: [Recovery!]! @derivedFrom(field: "distribution")
+  deposits: [Deposit!]! @derivedFrom(field: "liquidityMiningCampaign")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
+  claims: [Claim!]! @derivedFrom(field: "liquidityMiningCampaign")
+  recoveries: [Recovery!]! @derivedFrom(field: "liquidityMiningCampaign")
 }
 
 # LP tokens staking
@@ -328,7 +328,7 @@ type Deposit @entity {
   id: ID!
   user: Bytes!
   timestamp: BigInt!
-  distribution: Distribution!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
   amount: BigDecimal!
 }
 
@@ -337,7 +337,7 @@ type Withdrawal @entity {
   id: ID!
   user: Bytes!
   timestamp: BigInt!
-  distribution: Distribution!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
   amount: BigDecimal!
 }
 
@@ -346,7 +346,7 @@ type Claim @entity {
   id: ID!
   user: Bytes!
   timestamp: BigInt!
-  distribution: Distribution!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
   amounts: [BigDecimal!]!
 }
 
@@ -354,6 +354,6 @@ type Claim @entity {
 type Recovery @entity {
   id: ID!
   timestamp: BigInt!
-  distribution: Distribution!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
   amounts: [BigDecimal!]!
 }
