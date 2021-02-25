@@ -15,14 +15,14 @@ export function updateSwaprDayData(event: ethereum.Event): SwaprDayData {
     swaprDayData = new SwaprDayData(dayID.toString())
     swaprDayData.date = dayStartTimestamp
     swaprDayData.dailyVolumeUSD = ZERO_BD
-    swaprDayData.dailyVolumeETH = ZERO_BD
+    swaprDayData.dailyVolumeNativeCurrency = ZERO_BD
     swaprDayData.totalVolumeUSD = ZERO_BD
-    swaprDayData.totalVolumeETH = ZERO_BD
+    swaprDayData.totalVolumeNativeCurrency = ZERO_BD
     swaprDayData.dailyVolumeUntracked = ZERO_BD
   }
 
   swaprDayData.totalLiquidityUSD = swapr.totalLiquidityUSD
-  swaprDayData.totalLiquidityETH = swapr.totalLiquidityETH
+  swaprDayData.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency
   swaprDayData.txCount = swapr.txCount
   swaprDayData.save()
 
@@ -105,17 +105,17 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
     tokenDayData = new TokenDayData(tokenDayID)
     tokenDayData.date = dayStartTimestamp
     tokenDayData.token = token.id
-    tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPrice)
+    tokenDayData.priceUSD = token.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
     tokenDayData.dailyVolumeToken = ZERO_BD
-    tokenDayData.dailyVolumeETH = ZERO_BD
+    tokenDayData.dailyVolumeNativeCurrency = ZERO_BD
     tokenDayData.dailyVolumeUSD = ZERO_BD
     tokenDayData.dailyTxns = ZERO_BI
     tokenDayData.totalLiquidityUSD = ZERO_BD
   }
-  tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPrice)
+  tokenDayData.priceUSD = token.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
   tokenDayData.totalLiquidityToken = token.totalLiquidity
-  tokenDayData.totalLiquidityETH = token.totalLiquidity.times(token.derivedETH as BigDecimal)
-  tokenDayData.totalLiquidityUSD = tokenDayData.totalLiquidityETH.times(bundle.ethPrice)
+  tokenDayData.totalLiquidityNativeCurrency = token.totalLiquidity.times(token.derivedNativeCurrency as BigDecimal)
+  tokenDayData.totalLiquidityUSD = tokenDayData.totalLiquidityNativeCurrency.times(bundle.nativeCurrencyPrice)
   tokenDayData.dailyTxns = tokenDayData.dailyTxns.plus(ONE_BI)
   tokenDayData.save()
 

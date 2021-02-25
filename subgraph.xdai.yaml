@@ -1,0 +1,114 @@
+specVersion: 0.0.2
+description: Swapr is a decentralized protocol for automated token exchange on Ethereum.
+repository: https://github.com/nicoelzer/swapr-subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Factory
+    network: xdai
+    source:
+      address: '0x2A4d822BFB34d377c978F28a6C332Caa2fF87530'
+      abi: Factory
+      startBlock: 14557349
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/factory.ts
+      entities:
+        - Pair
+        - Token
+      abis:
+        - name: Factory
+          file: ./abis/factory.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
+      eventHandlers:
+        - event: PairCreated(indexed address,indexed address,address,uint256)
+          handler: handleNewPair
+  - kind: ethereum/contract
+    name: StakingRewardsFactory
+    network: xdai
+    source:
+      address: '0xA6f48C8190be8F92A4c31aAE4756289Ef3d91477'
+      abi: StakingRewardsFactory
+      startBlock: 14557354
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/staking-rewards.ts
+      entities:
+        - Distribution
+      abis:
+        - name: StakingRewardsFactory
+          file: ./abis/staking-rewards-factory.json
+      eventHandlers:
+        - event: DistributionCreated(address,address)
+          handler: handleDistributionCreation
+templates:
+  - kind: ethereum/contract
+    name: Pair
+    network: xdai
+    source:
+      abi: Pair
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/core.ts
+      entities:
+        - Pair
+        - Token
+      abis:
+        - name: Pair
+          file: ./abis/pair.json
+        - name: Factory
+          file: ./abis/factory.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
+          handler: handleSwap
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Sync(uint112,uint112)
+          handler: handleSync
+  - kind: ethereum/contract
+    name: Distribution
+    network: xdai
+    source:
+      abi: StakingRewardsDistribution
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/staking-rewards.ts
+      entities:
+        - Deposit
+        - Withdrawal
+        - Claim
+        - Recovery
+      abis:
+        - name: StakingRewardsDistribution
+          file: ./abis/staking-rewards-distribution.json
+      eventHandlers:
+        - event: Initialized(address[],address,uint256[],uint64,uint64,bool)
+          handler: handleDistributionInitialization
+        - event: Canceled()
+          handler: handleCancelation
+        - event: Staked(indexed address,uint256)
+          handler: handleDeposit
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawal
+        - event: Claimed(indexed address,uint256[])
+          handler: handleClaim
+        - event: Recovered(uint256[])
+          handler: handleRecovery

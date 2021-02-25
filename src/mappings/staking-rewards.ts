@@ -30,7 +30,7 @@ import {
   fetchTokenDecimals,
   ZERO_BI
 } from './helpers'
-import { findEthPerToken } from './pricing'
+import { findNativeCurrencyPerToken } from './pricing'
 import { getStakingRewardsFactoryAddress } from '../commons/addresses'
 
 export function handleDistributionCreation(event: DistributionCreated): void {
@@ -97,7 +97,7 @@ export function handleDistributionInitialization(event: Initialized): void {
         return
       }
       rewardToken.decimals = decimals
-      rewardToken.derivedETH = findEthPerToken(rewardToken as Token)
+      rewardToken.derivedNativeCurrency = findNativeCurrencyPerToken(rewardToken as Token)
       rewardToken.tradeVolume = ZERO_BD
       rewardToken.tradeVolumeUSD = ZERO_BD
       rewardToken.untrackedVolumeUSD = ZERO_BD
