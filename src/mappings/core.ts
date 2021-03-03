@@ -240,7 +240,7 @@ export function handleSync(event: Sync): void {
 
   pair.save()
 
-  // update ETH price now that reserves could have changed
+  // update native currency price now that reserves could have changed
   let bundle = Bundle.load('1')
   bundle.nativeCurrencyPrice = getNativeCurrencyPriceInUSD()
   bundle.save()
@@ -251,24 +251,27 @@ export function handleSync(event: Sync): void {
   token1.save()
 
   // get tracked liquidity - will be 0 if neither is in whitelist
-  let trackedLiquidityETH: BigDecimal
+  let trackedLiquidityNativeCurrency: BigDecimal
   if (bundle.nativeCurrencyPrice.notEqual(ZERO_BD)) {
-    trackedLiquidityETH = getTrackedLiquidityUSD(pair.reserve0, token0 as Token, pair.reserve1, token1 as Token).div(
-      bundle.nativeCurrencyPrice
-    )
+    trackedLiquidityNativeCurrency = getTrackedLiquidityUSD(
+      pair.reserve0,
+      token0 as Token,
+      pair.reserve1,
+      token1 as Token
+    ).div(bundle.nativeCurrencyPrice)
   } else {
-    trackedLiquidityETH = ZERO_BD
+    trackedLiquidityNativeCurrency = ZERO_BD
   }
 
   // use derived amounts within pair
-  pair.trackedReserveNativeCurrency = trackedLiquidityETH
+  pair.trackedReserveNativeCurrency = trackedLiquidityNativeCurrency
   pair.reserveNativeCurrency = pair.reserve0
     .times(token0.derivedNativeCurrency as BigDecimal)
     .plus(pair.reserve1.times(token1.derivedNativeCurrency as BigDecimal))
   pair.reserveUSD = pair.reserveNativeCurrency.times(bundle.nativeCurrencyPrice)
 
   // use tracked amounts globally
-  swapr.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency.plus(trackedLiquidityETH)
+  swapr.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency.plus(trackedLiquidityNativeCurrency)
   swapr.totalLiquidityUSD = swapr.totalLiquidityNativeCurrency.times(bundle.nativeCurrencyPrice)
 
   // now correctly set liquidity amounts for each token
@@ -301,7 +304,7 @@ export function handleMint(event: Mint): void {
   token0.txCount = token0.txCount.plus(ONE_BI)
   token1.txCount = token1.txCount.plus(ONE_BI)
 
-  // get new amounts of USD and ETH for tracking
+  // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
   let amountTotalUSD = token1.derivedNativeCurrency
     .times(token1Amount)
@@ -361,7 +364,7 @@ export function handleBurn(event: Burn): void {
   token0.txCount = token0.txCount.plus(ONE_BI)
   token1.txCount = token1.txCount.plus(ONE_BI)
 
-  // get new amounts of USD and ETH for tracking
+  // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
   let amountTotalUSD = token1.derivedNativeCurrency
     .times(token1Amount)
@@ -412,24 +415,24 @@ export function handleSwap(event: Swap): void {
   let amount0Total = amount0Out.plus(amount0In)
   let amount1Total = amount1Out.plus(amount1In)
 
-  // ETH/USD prices
+  // native currency/USD prices
   let bundle = Bundle.load('1')
 
-  // get total amounts of derived USD and ETH for tracking
-  let derivedAmountETH = token1.derivedNativeCurrency
+  // get total amounts of derived USD and native currency for tracking
+  let derivedAmountNativeCurrency = token1.derivedNativeCurrency
     .times(amount1Total)
     .plus(token0.derivedNativeCurrency.times(amount0Total))
     .div(BigDecimal.fromString('2'))
-  let derivedAmountUSD = derivedAmountETH.times(bundle.nativeCurrencyPrice)
+  let derivedAmountUSD = derivedAmountNativeCurrency.times(bundle.nativeCurrencyPrice)
 
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(amount0Total, token0 as Token, amount1Total, token1 as Token, pair as Pair)
 
-  let trackedAmountETH: BigDecimal
+  let trackedAmountNativeCurrency: BigDecimal
   if (bundle.nativeCurrencyPrice.equals(ZERO_BD)) {
-    trackedAmountETH = ZERO_BD
+    trackedAmountNativeCurrency = ZERO_BD
   } else {
-    trackedAmountETH = trackedAmountUSD.div(bundle.nativeCurrencyPrice)
+    trackedAmountNativeCurrency = trackedAmountUSD.div(bundle.nativeCurrencyPrice)
   }
 
   // update token0 global volume and token liquidity stats
@@ -457,7 +460,7 @@ export function handleSwap(event: Swap): void {
   // update global values, only used tracked amounts for volume
   let swapr = SwaprFactory.load(getFactoryAddress())
   swapr.totalVolumeUSD = swapr.totalVolumeUSD.plus(trackedAmountUSD)
-  swapr.totalVolumeNativeCurrency = swapr.totalVolumeNativeCurrency.plus(trackedAmountETH)
+  swapr.totalVolumeNativeCurrency = swapr.totalVolumeNativeCurrency.plus(trackedAmountNativeCurrency)
   swapr.untrackedVolumeUSD = swapr.untrackedVolumeUSD.plus(derivedAmountUSD)
   swapr.txCount = swapr.txCount.plus(ONE_BI)
 
@@ -518,7 +521,7 @@ export function handleSwap(event: Swap): void {
 
   // swap specific updating
   swaprDayData.dailyVolumeUSD = swaprDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  swaprDayData.dailyVolumeNativeCurrency = swaprDayData.dailyVolumeNativeCurrency.plus(trackedAmountETH)
+  swaprDayData.dailyVolumeNativeCurrency = swaprDayData.dailyVolumeNativeCurrency.plus(trackedAmountNativeCurrency)
   swaprDayData.dailyVolumeUntracked = swaprDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
   swaprDayData.save()
 

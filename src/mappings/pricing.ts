@@ -16,26 +16,26 @@ export function getNativeCurrencyPriceInUSD(): BigDecimal {
     return ONE_BD
   }
 
-  // fetch eth prices for each stablecoin
+  // fetch native currency prices for each stablecoin
   let daiPair = Pair.load(getDaiNativeCurrencyWrapperPairAddress()) // dai is token0
   let usdcPair = Pair.load(getUsdcNativeCurrencyWrapperPairAddress()) // usdc is token0
   let usdtPair = Pair.load(getUsdtNativeCurrencyWrapperPair()) // usdt is token1
 
   // all 3 have been created
   if (daiPair !== null && usdcPair !== null && usdtPair !== null) {
-    let totalLiquidityETH = daiPair.reserve1.plus(usdcPair.reserve1).plus(usdtPair.reserve0)
-    let daiWeight = daiPair.reserve1.div(totalLiquidityETH)
-    let usdcWeight = usdcPair.reserve1.div(totalLiquidityETH)
-    let usdtWeight = usdtPair.reserve0.div(totalLiquidityETH)
+    let totalLiquidityNativeCurrency = daiPair.reserve1.plus(usdcPair.reserve1).plus(usdtPair.reserve0)
+    let daiWeight = daiPair.reserve1.div(totalLiquidityNativeCurrency)
+    let usdcWeight = usdcPair.reserve1.div(totalLiquidityNativeCurrency)
+    let usdtWeight = usdtPair.reserve0.div(totalLiquidityNativeCurrency)
     return daiPair.token0Price
       .times(daiWeight)
       .plus(usdcPair.token0Price.times(usdcWeight))
       .plus(usdtPair.token1Price.times(usdtWeight))
     // dai and USDC have been created
   } else if (daiPair !== null && usdcPair !== null) {
-    let totalLiquidityETH = daiPair.reserve1.plus(usdcPair.reserve1)
-    let daiWeight = daiPair.reserve1.div(totalLiquidityETH)
-    let usdcWeight = usdcPair.reserve1.div(totalLiquidityETH)
+    let totalLiquidityNativeCurrency = daiPair.reserve1.plus(usdcPair.reserve1)
+    let daiWeight = daiPair.reserve1.div(totalLiquidityNativeCurrency)
+    let usdcWeight = usdcPair.reserve1.div(totalLiquidityNativeCurrency)
     return daiPair.token0Price.times(daiWeight).plus(usdcPair.token0Price.times(usdcWeight))
     // USDC is the only pair so far
   } else if (usdcPair !== null) {
@@ -46,8 +46,8 @@ export function getNativeCurrencyPriceInUSD(): BigDecimal {
 }
 
 /**
- * Search through graph to find derived Eth per token.
- * @todo update to be derived ETH (add stablecoin estimates)
+ * Search through graph to find derived native currency per token.
+ * @todo update to be derived native currency (add stablecoin estimates)
  **/
 export function findNativeCurrencyPerToken(token: Token): BigDecimal {
   if (token.id == getNativeCurrencyWrapperAddress()) {
@@ -61,11 +61,11 @@ export function findNativeCurrencyPerToken(token: Token): BigDecimal {
       let pair = Pair.load(pairAddress.toHexString())
       if (pair.token0 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
         let token1 = Token.load(pair.token1)
-        return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * Eth per token 1
+        return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * native currency per token 1
       }
       if (pair.token1 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
         let token0 = Token.load(pair.token0)
-        return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * ETH per token 0
+        return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * native currency per token 0
       }
     }
   }
