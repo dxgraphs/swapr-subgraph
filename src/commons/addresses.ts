@@ -39,7 +39,7 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
   if (network == 'mainnet') {
     return [
       '0xa1d65e8fb6e87b60feccbc582f7f97804b725521', // DXD
-      '0x5fbdb2315678afecb367f032d93f642f64180aa3', // WETH
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
       '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
       '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
       '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
@@ -65,6 +65,11 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
     return [
       '0x554898a0bf98ab0c03ff86c7dccbe29269cc4d29', // DXD
       '0xc778417e063141139fce010982780140aa0cd5ab' // WETH
+    ]
+  }
+  if (network == 'xdai') {
+    return [
+      '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d' // WXDAI
     ]
   }
   log.warning('no liquidity tracking token address for unsupported network {}', [network])
