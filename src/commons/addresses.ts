@@ -8,7 +8,7 @@ export function getFactoryAddress(): string {
   // not using a switch-case because using strings is not yet supported (only u32)
   if (network == 'mainnet') return '0xd34971BaB6E5E356fd250715F5dE0492BB070452'
   if (network == 'rinkeby') return '0x02f45e773436C6D96Cc73600fe94a660ec67734C'
-  if (network == 'xdai') return '0x2a4d822bfb34d377c978f28a6c332caa2ff87530'
+  if (network == 'xdai') return '0x5d48c95adffd4b40c1aaadc4e08fc44117e02179'
   log.warning('no factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -18,7 +18,7 @@ export function getStakingRewardsFactoryAddress(): string {
   // not using a switch-case because using strings is not yet supported (only u32)
   if (network == 'mainnet') return ADDRESS_ZERO
   if (network == 'rinkeby') return '0xe14929d0483e61cb3335ba1ba9aa5a8c4b59ded7'
-  if (network == 'xdai') return '0xa6f48c8190be8f92a4c31aae4756289ef3d91477'
+  if (network == 'xdai') return ADDRESS_ZERO
   log.warning('no staking rewards factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
