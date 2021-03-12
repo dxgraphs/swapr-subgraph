@@ -12,11 +12,15 @@ import {
 } from '../types/schema'
 import { Pair as PairContract, Mint, Burn, Swap, Transfer, Sync } from '../types/templates/Pair/Pair'
 import { updatePairDayData, updateTokenDayData, updateSwaprDayData, updatePairHourData } from './dayUpdates'
-import { getEthPriceInUSD, findEthPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from './pricing'
+import {
+  getNativeCurrencyPriceInUSD,
+  findNativeCurrencyPerToken,
+  getTrackedVolumeUSD,
+  getTrackedLiquidityUSD
+} from './pricing'
 import {
   convertTokenToDecimal,
   ADDRESS_ZERO,
-  FACTORY_ADDRESS,
   ONE_BI,
   createUser,
   createLiquidityPosition,
@@ -24,6 +28,7 @@ import {
   BI_18,
   createLiquiditySnapshot
 } from './helpers'
+import { getFactoryAddress } from '../commons/addresses'
 
 function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId).sender !== null // sufficient checks
@@ -35,7 +40,7 @@ export function handleTransfer(event: Transfer): void {
     return
   }
 
-  let factory = SwaprFactory.load(FACTORY_ADDRESS)
+  let factory = SwaprFactory.load(getFactoryAddress())
   let transactionHash = event.transaction.hash.toHexString()
 
   // user stats
@@ -214,10 +219,12 @@ export function handleSync(event: Sync): void {
   let pair = Pair.load(event.address.toHex())
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
-  swapr.totalLiquidityETH = swapr.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
+  swapr.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency.minus(
+    pair.trackedReserveNativeCurrency as BigDecimal
+  )
 
   // reset token total liquidity amounts
   token0.totalLiquidity = token0.totalLiquidity.minus(pair.reserve0)
@@ -233,36 +240,39 @@ export function handleSync(event: Sync): void {
 
   pair.save()
 
-  // update ETH price now that reserves could have changed
+  // update native currency price now that reserves could have changed
   let bundle = Bundle.load('1')
-  bundle.ethPrice = getEthPriceInUSD()
+  bundle.nativeCurrencyPrice = getNativeCurrencyPriceInUSD()
   bundle.save()
 
-  token0.derivedETH = findEthPerToken(token0 as Token)
-  token1.derivedETH = findEthPerToken(token1 as Token)
+  token0.derivedNativeCurrency = findNativeCurrencyPerToken(token0 as Token)
+  token1.derivedNativeCurrency = findNativeCurrencyPerToken(token1 as Token)
   token0.save()
   token1.save()
 
   // get tracked liquidity - will be 0 if neither is in whitelist
-  let trackedLiquidityETH: BigDecimal
-  if (bundle.ethPrice.notEqual(ZERO_BD)) {
-    trackedLiquidityETH = getTrackedLiquidityUSD(pair.reserve0, token0 as Token, pair.reserve1, token1 as Token).div(
-      bundle.ethPrice
-    )
+  let trackedLiquidityNativeCurrency: BigDecimal
+  if (bundle.nativeCurrencyPrice.notEqual(ZERO_BD)) {
+    trackedLiquidityNativeCurrency = getTrackedLiquidityUSD(
+      pair.reserve0,
+      token0 as Token,
+      pair.reserve1,
+      token1 as Token
+    ).div(bundle.nativeCurrencyPrice)
   } else {
-    trackedLiquidityETH = ZERO_BD
+    trackedLiquidityNativeCurrency = ZERO_BD
   }
 
   // use derived amounts within pair
-  pair.trackedReserveETH = trackedLiquidityETH
-  pair.reserveETH = pair.reserve0
-    .times(token0.derivedETH as BigDecimal)
-    .plus(pair.reserve1.times(token1.derivedETH as BigDecimal))
-  pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice)
+  pair.trackedReserveNativeCurrency = trackedLiquidityNativeCurrency
+  pair.reserveNativeCurrency = pair.reserve0
+    .times(token0.derivedNativeCurrency as BigDecimal)
+    .plus(pair.reserve1.times(token1.derivedNativeCurrency as BigDecimal))
+  pair.reserveUSD = pair.reserveNativeCurrency.times(bundle.nativeCurrencyPrice)
 
   // use tracked amounts globally
-  swapr.totalLiquidityETH = swapr.totalLiquidityETH.plus(trackedLiquidityETH)
-  swapr.totalLiquidityUSD = swapr.totalLiquidityETH.times(bundle.ethPrice)
+  swapr.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency.plus(trackedLiquidityNativeCurrency)
+  swapr.totalLiquidityUSD = swapr.totalLiquidityNativeCurrency.times(bundle.nativeCurrencyPrice)
 
   // now correctly set liquidity amounts for each token
   token0.totalLiquidity = token0.totalLiquidity.plus(pair.reserve0)
@@ -281,7 +291,7 @@ export function handleMint(event: Mint): void {
   let mint = MintEvent.load(mints[mints.length - 1])
 
   let pair = Pair.load(event.address.toHex())
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
 
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
@@ -294,12 +304,12 @@ export function handleMint(event: Mint): void {
   token0.txCount = token0.txCount.plus(ONE_BI)
   token1.txCount = token1.txCount.plus(ONE_BI)
 
-  // get new amounts of USD and ETH for tracking
+  // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
-  let amountTotalUSD = token1.derivedETH
+  let amountTotalUSD = token1.derivedNativeCurrency
     .times(token1Amount)
-    .plus(token0.derivedETH.times(token0Amount))
-    .times(bundle.ethPrice)
+    .plus(token0.derivedNativeCurrency.times(token0Amount))
+    .times(bundle.nativeCurrencyPrice)
 
   // update txn counts
   pair.txCount = pair.txCount.plus(ONE_BI)
@@ -342,7 +352,7 @@ export function handleBurn(event: Burn): void {
   let burn = BurnEvent.load(burns[burns.length - 1])
 
   let pair = Pair.load(event.address.toHex())
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
 
   //update token info
   let token0 = Token.load(pair.token0)
@@ -354,12 +364,12 @@ export function handleBurn(event: Burn): void {
   token0.txCount = token0.txCount.plus(ONE_BI)
   token1.txCount = token1.txCount.plus(ONE_BI)
 
-  // get new amounts of USD and ETH for tracking
+  // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
-  let amountTotalUSD = token1.derivedETH
+  let amountTotalUSD = token1.derivedNativeCurrency
     .times(token1Amount)
-    .plus(token0.derivedETH.times(token0Amount))
-    .times(bundle.ethPrice)
+    .plus(token0.derivedNativeCurrency.times(token0Amount))
+    .times(bundle.nativeCurrencyPrice)
 
   // update txn counts
   swapr.txCount = swapr.txCount.plus(ONE_BI)
@@ -405,24 +415,24 @@ export function handleSwap(event: Swap): void {
   let amount0Total = amount0Out.plus(amount0In)
   let amount1Total = amount1Out.plus(amount1In)
 
-  // ETH/USD prices
+  // native currency/USD prices
   let bundle = Bundle.load('1')
 
-  // get total amounts of derived USD and ETH for tracking
-  let derivedAmountETH = token1.derivedETH
+  // get total amounts of derived USD and native currency for tracking
+  let derivedAmountNativeCurrency = token1.derivedNativeCurrency
     .times(amount1Total)
-    .plus(token0.derivedETH.times(amount0Total))
+    .plus(token0.derivedNativeCurrency.times(amount0Total))
     .div(BigDecimal.fromString('2'))
-  let derivedAmountUSD = derivedAmountETH.times(bundle.ethPrice)
+  let derivedAmountUSD = derivedAmountNativeCurrency.times(bundle.nativeCurrencyPrice)
 
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(amount0Total, token0 as Token, amount1Total, token1 as Token, pair as Pair)
 
-  let trackedAmountETH: BigDecimal
-  if (bundle.ethPrice.equals(ZERO_BD)) {
-    trackedAmountETH = ZERO_BD
+  let trackedAmountNativeCurrency: BigDecimal
+  if (bundle.nativeCurrencyPrice.equals(ZERO_BD)) {
+    trackedAmountNativeCurrency = ZERO_BD
   } else {
-    trackedAmountETH = trackedAmountUSD.div(bundle.ethPrice)
+    trackedAmountNativeCurrency = trackedAmountUSD.div(bundle.nativeCurrencyPrice)
   }
 
   // update token0 global volume and token liquidity stats
@@ -448,9 +458,9 @@ export function handleSwap(event: Swap): void {
   pair.save()
 
   // update global values, only used tracked amounts for volume
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+  let swapr = SwaprFactory.load(getFactoryAddress())
   swapr.totalVolumeUSD = swapr.totalVolumeUSD.plus(trackedAmountUSD)
-  swapr.totalVolumeETH = swapr.totalVolumeETH.plus(trackedAmountETH)
+  swapr.totalVolumeNativeCurrency = swapr.totalVolumeNativeCurrency.plus(trackedAmountNativeCurrency)
   swapr.untrackedVolumeUSD = swapr.untrackedVolumeUSD.plus(derivedAmountUSD)
   swapr.txCount = swapr.txCount.plus(ONE_BI)
 
@@ -511,7 +521,7 @@ export function handleSwap(event: Swap): void {
 
   // swap specific updating
   swaprDayData.dailyVolumeUSD = swaprDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  swaprDayData.dailyVolumeETH = swaprDayData.dailyVolumeETH.plus(trackedAmountETH)
+  swaprDayData.dailyVolumeNativeCurrency = swaprDayData.dailyVolumeNativeCurrency.plus(trackedAmountNativeCurrency)
   swaprDayData.dailyVolumeUntracked = swaprDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
   swaprDayData.save()
 
@@ -529,17 +539,21 @@ export function handleSwap(event: Swap): void {
 
   // swap specific updating for token0
   token0DayData.dailyVolumeToken = token0DayData.dailyVolumeToken.plus(amount0Total)
-  token0DayData.dailyVolumeETH = token0DayData.dailyVolumeETH.plus(amount0Total.times(token1.derivedETH as BigDecimal))
+  token0DayData.dailyVolumeNativeCurrency = token0DayData.dailyVolumeNativeCurrency.plus(
+    amount0Total.times(token1.derivedNativeCurrency as BigDecimal)
+  )
   token0DayData.dailyVolumeUSD = token0DayData.dailyVolumeUSD.plus(
-    amount0Total.times(token0.derivedETH as BigDecimal).times(bundle.ethPrice)
+    amount0Total.times(token0.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
   )
   token0DayData.save()
 
   // swap specific updating
   token1DayData.dailyVolumeToken = token1DayData.dailyVolumeToken.plus(amount1Total)
-  token1DayData.dailyVolumeETH = token1DayData.dailyVolumeETH.plus(amount1Total.times(token1.derivedETH as BigDecimal))
+  token1DayData.dailyVolumeNativeCurrency = token1DayData.dailyVolumeNativeCurrency.plus(
+    amount1Total.times(token1.derivedNativeCurrency as BigDecimal)
+  )
   token1DayData.dailyVolumeUSD = token1DayData.dailyVolumeUSD.plus(
-    amount1Total.times(token1.derivedETH as BigDecimal).times(bundle.ethPrice)
+    amount1Total.times(token1.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
   )
   token1DayData.save()
 }

@@ -7,14 +7,14 @@ type SwaprFactory @entity {
 
   # total volume
   totalVolumeUSD: BigDecimal!
-  totalVolumeETH: BigDecimal!
+  totalVolumeNativeCurrency: BigDecimal!
 
   # untracked values - less confident USD scores
   untrackedVolumeUSD: BigDecimal!
 
   # total liquidity
   totalLiquidityUSD: BigDecimal!
-  totalLiquidityETH: BigDecimal!
+  totalLiquidityNativeCurrency: BigDecimal!
 
   # transactions
   txCount: BigInt!
@@ -44,7 +44,7 @@ type Token @entity {
   totalLiquidity: BigDecimal!
 
   # derived prices
-  derivedETH: BigDecimal
+  derivedNativeCurrency: BigDecimal
 
   # derived fields
   tokenDayData: [TokenDayData!]! @derivedFrom(field: "token")
@@ -66,9 +66,9 @@ type Pair @entity {
   totalSupply: BigDecimal!
 
   # derived liquidity
-  reserveETH: BigDecimal!
+  reserveNativeCurrency: BigDecimal!
   reserveUSD: BigDecimal!
-  trackedReserveETH: BigDecimal! # used for separating per pair reserves and global
+  trackedReserveNativeCurrency: BigDecimal! # used for separating per pair reserves and global
   # Price in terms of the asset pair
   token0Price: BigDecimal!
   token1Price: BigDecimal!
@@ -89,6 +89,7 @@ type Pair @entity {
   # derived fields
   pairHourData: [PairHourData!]! @derivedFrom(field: "pair")
   liquidityPositions: [LiquidityPosition!]! @derivedFrom(field: "pair")
+  liquidityMiningCampaigns: [LiquidityMiningCampaign!]! @derivedFrom(field: "stakablePair")
   liquidityPositionSnapshots: [LiquidityPositionSnapshot!]! @derivedFrom(field: "pair")
   mints: [Mint!]! @derivedFrom(field: "pair")
   burns: [Burn!]! @derivedFrom(field: "pair")
@@ -211,7 +212,7 @@ type Swap @entity {
 # stores for USD calculations
 type Bundle @entity {
   id: ID!
-  ethPrice: BigDecimal! # price of ETH usd
+  nativeCurrencyPrice: BigDecimal! # price of native currency usd
 }
 
 # Data accumulated and condensed into day stats for all of Swapr
@@ -219,12 +220,12 @@ type SwaprDayData @entity {
   id: ID! # timestamp rounded to current day by dividing by 86400
   date: Int!
 
-  dailyVolumeETH: BigDecimal!
+  dailyVolumeNativeCurrency: BigDecimal!
   dailyVolumeUSD: BigDecimal!
   dailyVolumeUntracked: BigDecimal!
 
-  totalVolumeETH: BigDecimal!
-  totalLiquidityETH: BigDecimal!
+  totalVolumeNativeCurrency: BigDecimal!
+  totalLiquidityNativeCurrency: BigDecimal!
   totalVolumeUSD: BigDecimal! # Accumulate at each trade, not just calculated off whatever totalVolume is. making it more accurate as it is a live conversion
   totalLiquidityUSD: BigDecimal!
 
@@ -282,15 +283,77 @@ type TokenDayData @entity {
 
   # volume stats
   dailyVolumeToken: BigDecimal!
-  dailyVolumeETH: BigDecimal!
+  dailyVolumeNativeCurrency: BigDecimal!
   dailyVolumeUSD: BigDecimal!
   dailyTxns: BigInt!
 
   # liquidity stats
   totalLiquidityToken: BigDecimal!
-  totalLiquidityETH: BigDecimal!
+  totalLiquidityNativeCurrency: BigDecimal!
   totalLiquidityUSD: BigDecimal!
 
   # price stats
   priceUSD: BigDecimal!
+}
+
+# Staking rewards distribution factory
+type SwaprStakingRewardsFactory @entity {
+  # factory address
+  id: ID!
+  initializedCampaignsCount: Int!
+}
+
+# Liquidity mining campaign
+type LiquidityMiningCampaign @entity {
+  # campaign address
+  id: ID!
+  initialized: Boolean!
+  owner: Bytes!
+  startsAt: BigInt!
+  endsAt: BigInt!
+  duration: BigInt!
+  locked: Boolean!
+  stakablePair: Pair!
+  rewardTokens: [Token!]!
+  rewardAmounts: [BigDecimal!]!
+  stakedAmount: BigDecimal!
+  deposits: [Deposit!]! @derivedFrom(field: "liquidityMiningCampaign")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
+  claims: [Claim!]! @derivedFrom(field: "liquidityMiningCampaign")
+  recoveries: [Recovery!]! @derivedFrom(field: "liquidityMiningCampaign")
+}
+
+# LP tokens staking
+type Deposit @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
+  amount: BigDecimal!
+}
+
+# LP tokens withdrawing
+type Withdrawal @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
+  amount: BigDecimal!
+}
+
+# Reward tokens claiming
+type Claim @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
+  amounts: [BigDecimal!]!
+}
+
+# Reward tokens recovery from distribution owner
+type Recovery @entity {
+  id: ID!
+  timestamp: BigInt!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
+  amounts: [BigDecimal!]!
 }

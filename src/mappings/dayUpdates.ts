@@ -1,11 +1,12 @@
 import { PairHourData } from './../types/schema'
 /* eslint-disable prefer-const */
-import { BigInt, BigDecimal, EthereumEvent } from '@graphprotocol/graph-ts'
+import { BigInt, BigDecimal, ethereum } from '@graphprotocol/graph-ts'
 import { Pair, Bundle, Token, SwaprFactory, SwaprDayData, PairDayData, TokenDayData } from '../types/schema'
-import { ONE_BI, ZERO_BD, ZERO_BI, FACTORY_ADDRESS } from './helpers'
+import { ONE_BI, ZERO_BD, ZERO_BI } from './helpers'
+import { getFactoryAddress } from '../commons/addresses'
 
-export function updateSwaprDayData(event: EthereumEvent): SwaprDayData {
-  let swapr = SwaprFactory.load(FACTORY_ADDRESS)
+export function updateSwaprDayData(event: ethereum.Event): SwaprDayData {
+  let swapr = SwaprFactory.load(getFactoryAddress())
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
@@ -14,21 +15,21 @@ export function updateSwaprDayData(event: EthereumEvent): SwaprDayData {
     swaprDayData = new SwaprDayData(dayID.toString())
     swaprDayData.date = dayStartTimestamp
     swaprDayData.dailyVolumeUSD = ZERO_BD
-    swaprDayData.dailyVolumeETH = ZERO_BD
+    swaprDayData.dailyVolumeNativeCurrency = ZERO_BD
     swaprDayData.totalVolumeUSD = ZERO_BD
-    swaprDayData.totalVolumeETH = ZERO_BD
+    swaprDayData.totalVolumeNativeCurrency = ZERO_BD
     swaprDayData.dailyVolumeUntracked = ZERO_BD
   }
 
   swaprDayData.totalLiquidityUSD = swapr.totalLiquidityUSD
-  swaprDayData.totalLiquidityETH = swapr.totalLiquidityETH
+  swaprDayData.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency
   swaprDayData.txCount = swapr.txCount
   swaprDayData.save()
 
   return swaprDayData as SwaprDayData
 }
 
-export function updatePairDayData(event: EthereumEvent): PairDayData {
+export function updatePairDayData(event: ethereum.Event): PairDayData {
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
@@ -60,7 +61,7 @@ export function updatePairDayData(event: EthereumEvent): PairDayData {
   return pairDayData as PairDayData
 }
 
-export function updatePairHourData(event: EthereumEvent): PairHourData {
+export function updatePairHourData(event: ethereum.Event): PairHourData {
   let timestamp = event.block.timestamp.toI32()
   let hourIndex = timestamp / 3600 // get unique hour within unix history
   let hourStartUnix = hourIndex * 3600 // want the rounded effect
@@ -89,7 +90,7 @@ export function updatePairHourData(event: EthereumEvent): PairHourData {
   return pairHourData as PairHourData
 }
 
-export function updateTokenDayData(token: Token, event: EthereumEvent): TokenDayData {
+export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDayData {
   let bundle = Bundle.load('1')
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
@@ -104,17 +105,17 @@ export function updateTokenDayData(token: Token, event: EthereumEvent): TokenDay
     tokenDayData = new TokenDayData(tokenDayID)
     tokenDayData.date = dayStartTimestamp
     tokenDayData.token = token.id
-    tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPrice)
+    tokenDayData.priceUSD = token.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
     tokenDayData.dailyVolumeToken = ZERO_BD
-    tokenDayData.dailyVolumeETH = ZERO_BD
+    tokenDayData.dailyVolumeNativeCurrency = ZERO_BD
     tokenDayData.dailyVolumeUSD = ZERO_BD
     tokenDayData.dailyTxns = ZERO_BI
     tokenDayData.totalLiquidityUSD = ZERO_BD
   }
-  tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPrice)
+  tokenDayData.priceUSD = token.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
   tokenDayData.totalLiquidityToken = token.totalLiquidity
-  tokenDayData.totalLiquidityETH = token.totalLiquidity.times(token.derivedETH as BigDecimal)
-  tokenDayData.totalLiquidityUSD = tokenDayData.totalLiquidityETH.times(bundle.ethPrice)
+  tokenDayData.totalLiquidityNativeCurrency = token.totalLiquidity.times(token.derivedNativeCurrency as BigDecimal)
+  tokenDayData.totalLiquidityUSD = tokenDayData.totalLiquidityNativeCurrency.times(bundle.nativeCurrencyPrice)
   tokenDayData.dailyTxns = tokenDayData.dailyTxns.plus(ONE_BI)
   tokenDayData.save()
 

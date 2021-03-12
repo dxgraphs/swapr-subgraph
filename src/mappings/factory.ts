@@ -4,7 +4,6 @@ import { SwaprFactory, Pair, Token, Bundle } from '../types/schema'
 import { PairCreated } from '../types/Factory/Factory'
 import { Pair as PairTemplate } from '../types/templates'
 import {
-  FACTORY_ADDRESS,
   ZERO_BD,
   ZERO_BI,
   fetchTokenSymbol,
@@ -12,15 +11,17 @@ import {
   fetchTokenDecimals,
   fetchTokenTotalSupply
 } from './helpers'
+import { getFactoryAddress } from '../commons/addresses'
 
 export function handleNewPair(event: PairCreated): void {
   // load factory (create if first exchange)
-  let factory = SwaprFactory.load(FACTORY_ADDRESS)
+  let factoryAddress = getFactoryAddress()
+  let factory = SwaprFactory.load(factoryAddress)
   if (factory === null) {
-    factory = new SwaprFactory(FACTORY_ADDRESS)
+    factory = new SwaprFactory(factoryAddress)
     factory.pairCount = 0
-    factory.totalVolumeETH = ZERO_BD
-    factory.totalLiquidityETH = ZERO_BD
+    factory.totalVolumeNativeCurrency = ZERO_BD
+    factory.totalLiquidityNativeCurrency = ZERO_BD
     factory.totalVolumeUSD = ZERO_BD
     factory.untrackedVolumeUSD = ZERO_BD
     factory.totalLiquidityUSD = ZERO_BD
@@ -28,7 +29,7 @@ export function handleNewPair(event: PairCreated): void {
 
     // create new bundle
     let bundle = new Bundle('1')
-    bundle.ethPrice = ZERO_BD
+    bundle.nativeCurrencyPrice = ZERO_BD
     bundle.save()
   }
   factory.pairCount = factory.pairCount + 1
@@ -52,7 +53,7 @@ export function handleNewPair(event: PairCreated): void {
     }
 
     token0.decimals = decimals
-    token0.derivedETH = ZERO_BD
+    token0.derivedNativeCurrency = ZERO_BD
     token0.tradeVolume = ZERO_BD
     token0.tradeVolumeUSD = ZERO_BD
     token0.untrackedVolumeUSD = ZERO_BD
@@ -74,7 +75,7 @@ export function handleNewPair(event: PairCreated): void {
       return
     }
     token1.decimals = decimals
-    token1.derivedETH = ZERO_BD
+    token1.derivedNativeCurrency = ZERO_BD
     token1.tradeVolume = ZERO_BD
     token1.tradeVolumeUSD = ZERO_BD
     token1.untrackedVolumeUSD = ZERO_BD
@@ -92,8 +93,8 @@ export function handleNewPair(event: PairCreated): void {
   pair.txCount = ZERO_BI
   pair.reserve0 = ZERO_BD
   pair.reserve1 = ZERO_BD
-  pair.trackedReserveETH = ZERO_BD
-  pair.reserveETH = ZERO_BD
+  pair.trackedReserveNativeCurrency = ZERO_BD
+  pair.reserveNativeCurrency = ZERO_BD
   pair.reserveUSD = ZERO_BD
   pair.totalSupply = ZERO_BD
   pair.volumeToken0 = ZERO_BD
