@@ -28,7 +28,8 @@ import {
   fetchTokenName,
   fetchTokenTotalSupply,
   fetchTokenDecimals,
-  ZERO_BI
+  ZERO_BI,
+  getOrCreateLiquidityMiningPosition
 } from './helpers'
 import { findNativeCurrencyPerToken } from './pricing'
 import { getStakingRewardsFactoryAddress } from '../commons/addresses'
@@ -145,6 +146,14 @@ export function handleDeposit(event: Staked): void {
   deposit.timestamp = event.block.timestamp
   deposit.amount = stakedAmount
   deposit.save()
+
+  let position = getOrCreateLiquidityMiningPosition(
+    campaign as LiquidityMiningCampaign,
+    Pair.load(campaign.stakablePair) as Pair,
+    event.params.staker
+  )
+  position.stakedAmount = position.stakedAmount.plus(stakedAmount)
+  position.save()
 }
 
 export function handleWithdrawal(event: Withdrawn): void {
@@ -160,6 +169,14 @@ export function handleWithdrawal(event: Withdrawn): void {
   withdrawal.timestamp = event.block.timestamp
   withdrawal.amount = withdrawnAmount
   withdrawal.save()
+
+  let position = getOrCreateLiquidityMiningPosition(
+    campaign as LiquidityMiningCampaign,
+    Pair.load(campaign.stakablePair) as Pair,
+    event.params.withdrawer
+  )
+  position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
+  position.save()
 }
 
 export function handleClaim(event: Claimed): void {
