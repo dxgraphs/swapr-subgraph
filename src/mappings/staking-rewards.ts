@@ -77,6 +77,7 @@ export function handleDistributionInitialization(event: Initialized): void {
   distribution.duration = duration
   distribution.locked = event.params.locked
   distribution.stakablePair = stakablePair.id
+  distribution.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18) // lp tokens have hardcoded 18 decimals
   let rewardTokenAddresses = event.params.rewardsTokenAddresses
   let eventRewardAmounts = event.params.rewardsAmounts
   let rewardAmounts: BigDecimal[] = []
