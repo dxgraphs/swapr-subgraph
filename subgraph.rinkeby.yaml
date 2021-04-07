@@ -112,3 +112,5 @@ templates:
           handler: handleClaim
         - event: Recovered(uint256[])
           handler: handleRecovery
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransfer

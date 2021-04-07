@@ -16,6 +16,7 @@ import {
   Canceled,
   Claimed,
   Initialized,
+  OwnershipTransferred,
   Recovered,
   Staked,
   Withdrawn
@@ -214,4 +215,10 @@ export function handleRecovery(event: Recovered): void {
     recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
   }
   recovery.save()
+}
+
+export function handleOwnershipTransfer(event: OwnershipTransferred): void {
+  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  campaign.owner = event.params.newOwner
+  campaign.save()
 }
