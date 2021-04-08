@@ -16,6 +16,7 @@ import {
   Canceled,
   Claimed,
   Initialized,
+  OwnershipTransferred,
   Recovered,
   Staked,
   Withdrawn
@@ -28,7 +29,8 @@ import {
   fetchTokenName,
   fetchTokenTotalSupply,
   fetchTokenDecimals,
-  ZERO_BI
+  ZERO_BI,
+  getOrCreateLiquidityMiningPosition
 } from './helpers'
 import { findNativeCurrencyPerToken } from './pricing'
 import { getStakingRewardsFactoryAddress } from '../commons/addresses'
@@ -77,6 +79,7 @@ export function handleDistributionInitialization(event: Initialized): void {
   distribution.duration = duration
   distribution.locked = event.params.locked
   distribution.stakablePair = stakablePair.id
+  distribution.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18) // lp tokens have hardcoded 18 decimals
   let rewardTokenAddresses = event.params.rewardsTokenAddresses
   let eventRewardAmounts = event.params.rewardsAmounts
   let rewardAmounts: BigDecimal[] = []
@@ -144,6 +147,14 @@ export function handleDeposit(event: Staked): void {
   deposit.timestamp = event.block.timestamp
   deposit.amount = stakedAmount
   deposit.save()
+
+  let position = getOrCreateLiquidityMiningPosition(
+    campaign as LiquidityMiningCampaign,
+    Pair.load(campaign.stakablePair) as Pair,
+    event.params.staker
+  )
+  position.stakedAmount = position.stakedAmount.plus(stakedAmount)
+  position.save()
 }
 
 export function handleWithdrawal(event: Withdrawn): void {
@@ -159,6 +170,14 @@ export function handleWithdrawal(event: Withdrawn): void {
   withdrawal.timestamp = event.block.timestamp
   withdrawal.amount = withdrawnAmount
   withdrawal.save()
+
+  let position = getOrCreateLiquidityMiningPosition(
+    campaign as LiquidityMiningCampaign,
+    Pair.load(campaign.stakablePair) as Pair,
+    event.params.withdrawer
+  )
+  position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
+  position.save()
 }
 
 export function handleClaim(event: Claimed): void {
@@ -196,4 +215,10 @@ export function handleRecovery(event: Recovered): void {
     recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
   }
   recovery.save()
+}
+
+export function handleOwnershipTransfer(event: OwnershipTransferred): void {
+  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  campaign.owner = event.params.newOwner
+  campaign.save()
 }

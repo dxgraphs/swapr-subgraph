@@ -17,7 +17,7 @@ export function getStakingRewardsFactoryAddress(): string {
   let network = dataSource.network() as string
   // not using a switch-case because using strings is not yet supported (only u32)
   if (network == 'mainnet') return ADDRESS_ZERO
-  if (network == 'rinkeby') return '0xe14929d0483e61cb3335ba1ba9aa5a8c4b59ded7'
+  if (network == 'rinkeby') return '0xb86f14bb9658c2218cf8235345fa66a6848fc088'
   if (network == 'xdai') return ADDRESS_ZERO
   log.warning('no staking rewards factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
@@ -69,7 +69,9 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
   }
   if (network == 'xdai') {
     return [
-      '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d' // WXDAI
+      '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d', // WXDAI
+      '0xb90d6bec20993be5d72a5ab353343f7a0281f158', // DXD
+      '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1' // WETH
     ]
   }
   log.warning('no liquidity tracking token address for unsupported network {}', [network])
