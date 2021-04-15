@@ -317,6 +317,7 @@ type LiquidityMiningCampaign @entity {
   rewardTokens: [Token!]!
   rewardAmounts: [BigDecimal!]!
   stakedAmount: BigDecimal!
+  stakingCap: BigDecimal!
   deposits: [Deposit!]! @derivedFrom(field: "liquidityMiningCampaign")
   withdrawals: [Withdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
   claims: [Claim!]! @derivedFrom(field: "liquidityMiningCampaign")

@@ -35,9 +35,9 @@ dataSources:
     name: StakingRewardsFactory
     network: rinkeby
     source:
-      address: '0xE14929d0483e61Cb3335BA1Ba9aA5a8C4b59ded7'
+      address: '0xDcA39454f0B83c6f0807708b0E6a620dd9BA6808'
       abi: StakingRewardsFactory
-      startBlock: 8088775
+      startBlock: 8417546
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -100,7 +100,7 @@ templates:
         - name: StakingRewardsDistribution
           file: ./abis/staking-rewards-distribution.json
       eventHandlers:
-        - event: Initialized(address[],address,uint256[],uint64,uint64,bool)
+        - event: Initialized(address[],address,uint256[],uint64,uint64,bool,uint256)
           handler: handleDistributionInitialization
         - event: Canceled()
           handler: handleCancelation
