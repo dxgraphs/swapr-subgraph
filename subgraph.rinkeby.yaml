@@ -35,9 +35,9 @@ dataSources:
     name: StakingRewardsFactory
     network: rinkeby
     source:
-      address: '0xB86f14bB9658C2218cF8235345Fa66A6848fc088'
+      address: '0xDcA39454f0B83c6f0807708b0E6a620dd9BA6808'
       abi: StakingRewardsFactory
-      startBlock: 8349693
+      startBlock: 8417546
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

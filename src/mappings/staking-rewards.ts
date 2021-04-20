@@ -112,6 +112,7 @@ export function handleDistributionInitialization(event: Initialized): void {
     rewardTokenIds.push(rewardToken.id)
   }
   distribution.stakedAmount = ZERO_BD
+  distribution.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18)
   distribution.rewardAmounts = rewardAmounts
   distribution.rewardTokens = rewardTokenIds
   distribution.initialized = true
