@@ -17,8 +17,8 @@ export function getStakingRewardsFactoryAddress(): string {
   let network = dataSource.network() as string
   // not using a switch-case because using strings is not yet supported (only u32)
   if (network == 'mainnet') return ADDRESS_ZERO
-  if (network == 'rinkeby') return '0xb86f14bb9658c2218cf8235345fa66a6848fc088'
-  if (network == 'xdai') return ADDRESS_ZERO
+  if (network == 'rinkeby') return '0xabd8180cdde7f40aa87490b3ffb7323d9202f08a'
+  if (network == 'xdai') return '0xcd2a45f36464fdb1065160e03a2353996ea8ff57'
   log.warning('no staking rewards factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
