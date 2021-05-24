@@ -109,6 +109,14 @@ type LiquidityPosition @entity {
   liquidityTokenBalance: BigDecimal!
 }
 
+type LiquidityMiningPosition @entity {
+  id: ID!
+  user: User!
+  targetedPair: Pair!
+  stakedAmount: BigDecimal!
+  liquidityMiningCampaign: LiquidityMiningCampaign!
+}
+
 # saved over time for return calculations, gets created and never updated
 type LiquidityPositionSnapshot @entity {
   id: ID!
@@ -317,6 +325,8 @@ type LiquidityMiningCampaign @entity {
   rewardTokens: [Token!]!
   rewardAmounts: [BigDecimal!]!
   stakedAmount: BigDecimal!
+  stakingCap: BigDecimal!
+  liquidityMiningPositions: [LiquidityMiningPosition!]! @derivedFrom(field: "liquidityMiningCampaign")
   deposits: [Deposit!]! @derivedFrom(field: "liquidityMiningCampaign")
   withdrawals: [Withdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
   claims: [Claim!]! @derivedFrom(field: "liquidityMiningCampaign")

@@ -69,7 +69,9 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
   }
   if (network == 'xdai') {
     return [
-      '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d' // WXDAI
+      '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d', // WXDAI
+      '0xb90d6bec20993be5d72a5ab353343f7a0281f158', // DXD
+      '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1' // WETH
     ]
   }
   log.warning('no liquidity tracking token address for unsupported network {}', [network])
