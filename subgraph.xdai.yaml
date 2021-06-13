@@ -35,9 +35,9 @@ dataSources:
     name: StakingRewardsFactory
     network: xdai
     source:
-      address: '0xCD2A45F36464FdB1065160e03A2353996Ea8Ff57'
+      address: '0xa039793Af0bb060c597362E8155a0327d9b8BEE8'
       abi: StakingRewardsFactory
-      startBlock: 15710884
+      startBlock: 16517765
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

@@ -31,6 +31,26 @@ dataSources:
       eventHandlers:
         - event: PairCreated(indexed address,indexed address,address,uint256)
           handler: handleNewPair
+  - kind: ethereum/contract
+    name: StakingRewardsFactory
+    network: mainnet
+    source:
+      address: '0x156F0568a6cE827e5d39F6768A5D24B694e1EA7b'
+      abi: StakingRewardsFactory
+      startBlock: 12583353
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/staking-rewards.ts
+      entities:
+        - Distribution
+      abis:
+        - name: StakingRewardsFactory
+          file: ./abis/staking-rewards-factory.json
+      eventHandlers:
+        - event: DistributionCreated(address,address)
+          handler: handleDistributionCreation
 templates:
   - kind: ethereum/contract
     name: Pair
@@ -61,3 +81,36 @@ templates:
           handler: handleTransfer
         - event: Sync(uint112,uint112)
           handler: handleSync
+  - kind: ethereum/contract
+    name: Distribution
+    network: mainnet
+    source:
+      abi: StakingRewardsDistribution
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/staking-rewards.ts
+      entities:
+        - Deposit
+        - Withdrawal
+        - Claim
+        - Recovery
+      abis:
+        - name: StakingRewardsDistribution
+          file: ./abis/staking-rewards-distribution.json
+      eventHandlers:
+        - event: Initialized(address[],address,uint256[],uint64,uint64,bool,uint256)
+          handler: handleDistributionInitialization
+        - event: Canceled()
+          handler: handleCancelation
+        - event: Staked(indexed address,uint256)
+          handler: handleDeposit
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawal
+        - event: Claimed(indexed address,uint256[])
+          handler: handleClaim
+        - event: Recovered(uint256[])
+          handler: handleRecovery
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransfer
