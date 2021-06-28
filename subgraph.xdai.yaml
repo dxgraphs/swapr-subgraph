@@ -46,8 +46,16 @@ dataSources:
       entities:
         - Distribution
       abis:
+        - name: Factory
+          file: ./abis/factory.json
         - name: StakingRewardsFactory
           file: ./abis/staking-rewards-factory.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: DistributionCreated(address,address)
           handler: handleDistributionCreation
@@ -70,6 +78,12 @@ templates:
           file: ./abis/pair.json
         - name: Factory
           file: ./abis/factory.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: Mint(indexed address,uint256,uint256)
           handler: handleMint
@@ -97,8 +111,16 @@ templates:
         - Claim
         - Recovery
       abis:
+        - name: Factory
+          file: ./abis/factory.json
         - name: StakingRewardsDistribution
           file: ./abis/staking-rewards-distribution.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: Initialized(address[],address,uint256[],uint64,uint64,bool,uint256)
           handler: handleDistributionInitialization
