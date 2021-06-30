@@ -9,6 +9,8 @@ export function getFactoryAddress(): string {
   if (network == 'mainnet') return '0xd34971BaB6E5E356fd250715F5dE0492BB070452'
   if (network == 'rinkeby') return '0x02f45e773436C6D96Cc73600fe94a660ec67734C'
   if (network == 'xdai') return '0x5d48c95adffd4b40c1aaadc4e08fc44117e02179'
+  if (network == 'arbitrum-one') return '0x01f1b4a2a48d5739dcc80d9de0f38bcc24902518'
+  if (network == 'arbitrum-rinkeby') return '0x5c702fbbcfb8ef5cc70c4e4341aa437ef9d55281'
   log.warning('no factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -19,6 +21,8 @@ export function getStakingRewardsFactoryAddress(): string {
   if (network == 'mainnet') return '0x156f0568a6ce827e5d39f6768a5d24b694e1ea7b'
   if (network == 'rinkeby') return '0x163a3640ce993a0b4c11885a6d4dac16dfc188e1'
   if (network == 'xdai') return '0xa039793af0bb060c597362e8155a0327d9b8bee8'
+  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-rinkeby') return '0x55bfae77d9980702e5b60d984983ae3b776ab91c'
   log.warning('no staking rewards factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -29,6 +33,8 @@ export function getNativeCurrencyWrapperAddress(): string {
   if (network == 'mainnet') return '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
   if (network == 'rinkeby') return '0xc778417e063141139fce010982780140aa0cd5ab'
   if (network == 'xdai') return '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d'
+  if (network == 'arbitrum-one') return '0xb47e6a5f8b33b3f17603c83a0535a9dcd7e32681'
+  if (network == 'arbitrum-rinkeby') return '0xB47e6A5f8b33b3F17603C83a0535A9dcD7E32681'
   log.warning('no native currency wrapper address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -74,6 +80,22 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
       '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1' // WETH
     ]
   }
+  if (network == 'arbitrum-one') {
+    return [
+      '0xC3Ae0333F0F34aa734D5493276223d95B8F9Cb37', // DXD
+      '0x0000000000000000000000000000000000000000', // WETH
+      '0xA970AF1a584579B618be4d69aD6F73459D112F95', // sUSD
+      '0x2e9a6Df78E42a30712c10a9Dc4b1C8656f8F2879', // MKR
+      '0xf97f4df75117a78c1A5a0DBb814Af92458539FB4' // LINK
+    ]
+  }
+  if (network == 'arbitrum-rinkeby') {
+    return [
+      '0x5d47100B0854525685907D5D773b92c22c0c745e', // DXD
+      '0xB47e6A5f8b33b3F17603C83a0535A9dcD7E32681', // WETH
+      '0x552444108a2aF6375205f320F196b5D1FEDFaA51' // DAI
+    ]
+  }
   log.warning('no liquidity tracking token address for unsupported network {}', [network])
   return []
 }
@@ -84,6 +106,8 @@ export function getUsdcNativeCurrencyWrapperPairAddress(): string {
   if (network == 'mainnet') return '0x98f29f527c8e0ecc67a3c2d5567833bee01f2a12'
   if (network == 'rinkeby') return '0xf3a261b601cd965cd18a5618c436a899c9abed51'
   if (network == 'xdai') return ADDRESS_ZERO
+  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
   log.warning('no usdc native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -94,6 +118,8 @@ export function getDaiNativeCurrencyWrapperPairAddress(): string {
   if (network == 'mainnet') return '0x7515be43d16f871588adc135d58a9c30a71eb34f'
   if (network == 'rinkeby') return ADDRESS_ZERO
   if (network == 'xdai') return ADDRESS_ZERO
+  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
   log.warning('no dai native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -104,6 +130,8 @@ export function getUsdtNativeCurrencyWrapperPair(): string {
   if (network == 'mainnet') return '0x83dd8227c5ef121f2ae99c6f1df0aa9e914448ce'
   if (network == 'rinkeby') return ADDRESS_ZERO
   if (network == 'xdai') return ADDRESS_ZERO
+  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
   log.warning('no usdt native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
