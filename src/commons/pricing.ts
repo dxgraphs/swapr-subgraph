@@ -23,7 +23,7 @@ export function getMinimumLiquidityThresholdNativeCurrency(): BigDecimal {
   if (network == 'rinkeby') return BigDecimal.fromString('0.01')
   if (network == 'xdai') return BigDecimal.fromString('10')
   if (network == 'arbitrum-one') return BigDecimal.fromString('0.1')
-  if (network == 'arbitrum-rinkeby') return BigDecimal.fromString('0.01')
+  if (network == 'arbitrum-rinkeby') return BigDecimal.fromString('0.001')
   log.warning('no minimum usd threshold for new pairs for unsupported network {}', [network])
   return ZERO_BD
 }

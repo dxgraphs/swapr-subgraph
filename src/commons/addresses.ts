@@ -33,8 +33,8 @@ export function getNativeCurrencyWrapperAddress(): string {
   if (network == 'mainnet') return '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
   if (network == 'rinkeby') return '0xc778417e063141139fce010982780140aa0cd5ab'
   if (network == 'xdai') return '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d'
-  if (network == 'arbitrum-one') return '0xb47e6a5f8b33b3f17603c83a0535a9dcd7e32681'
-  if (network == 'arbitrum-rinkeby') return '0xB47e6A5f8b33b3F17603C83a0535A9dcD7E32681'
+  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-rinkeby') return '0xb47e6a5f8b33b3f17603c83a0535a9dcd7e32681'
   log.warning('no native currency wrapper address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }
@@ -91,9 +91,9 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
   }
   if (network == 'arbitrum-rinkeby') {
     return [
-      '0x5d47100B0854525685907D5D773b92c22c0c745e', // DXD
-      '0xB47e6A5f8b33b3F17603C83a0535A9dcD7E32681', // WETH
-      '0x552444108a2aF6375205f320F196b5D1FEDFaA51' // DAI
+      '0x5d47100b0854525685907d5d773b92c22c0c745e', // DXD
+      '0xb47e6a5f8b33b3f17603c83a0535a9dcd7e32681', // WETH
+      '0x552444108a2af6375205f320f196b5d1fedfaa51' // DAI
     ]
   }
   log.warning('no liquidity tracking token address for unsupported network {}', [network])
@@ -119,7 +119,7 @@ export function getDaiNativeCurrencyWrapperPairAddress(): string {
   if (network == 'rinkeby') return ADDRESS_ZERO
   if (network == 'xdai') return ADDRESS_ZERO
   if (network == 'arbitrum-one') return ADDRESS_ZERO
-  if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
+  if (network == 'arbitrum-rinkeby') return '0x1bb34bc1967e0cbe1c9008e5390c6d426357549d'
   log.warning('no dai native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
 }

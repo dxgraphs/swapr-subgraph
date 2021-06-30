@@ -40,6 +40,8 @@ export function getNativeCurrencyPriceInUSD(): BigDecimal {
     // USDC is the only pair so far
   } else if (usdcPair !== null) {
     return usdcPair.token0Price
+  } else if (daiPair !== null) {
+    return daiPair.token0Price
   } else {
     return ZERO_BD
   }
