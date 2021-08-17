@@ -8,7 +8,7 @@ dataSources:
     name: Factory
     network: arbitrum-one
     source:
-      address: '0xd34971bab6e5e356fd250715f5de0492bb070452'
+      address: '0x01F1B4a2A48D5739dcc80D9DE0F38Bcc24902518'
       abi: Factory
       startBlock: 348
     mapping:
