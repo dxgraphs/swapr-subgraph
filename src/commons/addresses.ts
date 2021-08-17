@@ -21,7 +21,7 @@ export function getStakingRewardsFactoryAddress(): string {
   if (network == 'mainnet') return '0x156f0568a6ce827e5d39f6768a5d24b694e1ea7b'
   if (network == 'rinkeby') return '0x163a3640ce993a0b4c11885a6d4dac16dfc188e1'
   if (network == 'xdai') return '0xa039793af0bb060c597362e8155a0327d9b8bee8'
-  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-one') return '0x673f3ce20f265af91c1883f0f1daf6e5d3d53bec'
   if (network == 'arbitrum-rinkeby') return '0x55bfae77d9980702e5b60d984983ae3b776ab91c'
   log.warning('no staking rewards factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
