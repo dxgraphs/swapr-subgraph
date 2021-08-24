@@ -87,7 +87,8 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
       '0xA970AF1a584579B618be4d69aD6F73459D112F95', // sUSD
       '0x2e9a6Df78E42a30712c10a9Dc4b1C8656f8F2879', // MKR
       '0xf97f4df75117a78c1A5a0DBb814Af92458539FB4', // LINK
-      '0x955b9fe60a5b5093df9dc4b1b18ec8e934e77162' // SWPR
+      '0x955b9fe60a5b5093df9dc4b1b18ec8e934e77162', // SWPR
+      '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8' // USDC
     ]
   }
   if (network == 'arbitrum-rinkeby') {
@@ -107,7 +108,7 @@ export function getUsdcNativeCurrencyWrapperPairAddress(): string {
   if (network == 'mainnet') return '0x98f29f527c8e0ecc67a3c2d5567833bee01f2a12'
   if (network == 'rinkeby') return '0xf3a261b601cd965cd18a5618c436a899c9abed51'
   if (network == 'xdai') return ADDRESS_ZERO
-  if (network == 'arbitrum-one') return ADDRESS_ZERO
+  if (network == 'arbitrum-one') return '0x25b98da55c1e4fe64f5632ec4e450fcf4a5eaff9'
   if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
   log.warning('no usdc native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
