@@ -8,9 +8,9 @@ dataSources:
     name: Factory
     network: arbitrum-one
     source:
-      address: '0x359f20ad0f42d75a5077e65f30274cabe6f4f01a'
+      address: '0xBF9173b60a30B9ff8c37cac787B6EE87D5e47916'
       abi: Factory
-      startBlock: 277186
+      startBlock: 222103
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -35,9 +35,9 @@ dataSources:
     name: StakingRewardsFactory
     network: arbitrum-one
     source:
-      address: '0xeca7f78d59d16812948849663b26fe10e320f80c'
+      address: '0x85B94253ACd8C06525B509d94F9a9c5aF78a012f'
       abi: StakingRewardsFactory
-      startBlock: 277222
+      startBlock: 222110
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

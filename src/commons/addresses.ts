@@ -9,7 +9,7 @@ export function getFactoryAddress(): string {
   if (network == 'mainnet') return '0xd34971BaB6E5E356fd250715F5dE0492BB070452'
   if (network == 'rinkeby') return '0x02f45e773436C6D96Cc73600fe94a660ec67734C'
   if (network == 'xdai') return '0x5d48c95adffd4b40c1aaadc4e08fc44117e02179'
-  if (network == 'arbitrum-one') return '0xbf9173b60a30b9ff8c37cac787b6ee87d5e47916'
+  if (network == 'arbitrum-one') return '0x359f20ad0f42d75a5077e65f30274cabe6f4f01a'
   if (network == 'arbitrum-rinkeby') return '0x5c702fbbcfb8ef5cc70c4e4341aa437ef9d55281'
   log.warning('no factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
@@ -21,7 +21,7 @@ export function getStakingRewardsFactoryAddress(): string {
   if (network == 'mainnet') return '0x156f0568a6ce827e5d39f6768a5d24b694e1ea7b'
   if (network == 'rinkeby') return '0x163a3640ce993a0b4c11885a6d4dac16dfc188e1'
   if (network == 'xdai') return '0xa039793af0bb060c597362e8155a0327d9b8bee8'
-  if (network == 'arbitrum-one') return '0x85b94253acd8c06525b509d94f9a9c5af78a012f'
+  if (network == 'arbitrum-one') return '0xeca7f78d59d16812948849663b26fe10e320f80c'
   if (network == 'arbitrum-rinkeby') return '0x55bfae77d9980702e5b60d984983ae3b776ab91c'
   log.warning('no staking rewards factory address for unsupported network {}', [network])
   return ADDRESS_ZERO
@@ -87,7 +87,7 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
       '0xA970AF1a584579B618be4d69aD6F73459D112F95', // sUSD
       '0x2e9a6Df78E42a30712c10a9Dc4b1C8656f8F2879', // MKR
       '0xf97f4df75117a78c1A5a0DBb814Af92458539FB4', // LINK
-      '0x955b9fe60a5b5093df9dc4b1b18ec8e934e77162', // SWPR
+      '0xde903e2712288a1da82942dddf2c20529565ac30', // SWPR
       '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8' // USDC
     ]
   }
@@ -108,7 +108,7 @@ export function getUsdcNativeCurrencyWrapperPairAddress(): string {
   if (network == 'mainnet') return '0x98f29f527c8e0ecc67a3c2d5567833bee01f2a12'
   if (network == 'rinkeby') return '0xf3a261b601cd965cd18a5618c436a899c9abed51'
   if (network == 'xdai') return ADDRESS_ZERO
-  if (network == 'arbitrum-one') return '0x25b98da55c1e4fe64f5632ec4e450fcf4a5eaff9'
+  if (network == 'arbitrum-one') return '0x403b1405d8caffc1cc5032cc82aa135d2481d0cf'
   if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
   log.warning('no usdc native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
