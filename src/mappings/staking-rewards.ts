@@ -61,7 +61,7 @@ export function handleDistributionInitialization(event: Initialized): void {
   let stakablePair = Pair.load(event.params.stakableTokenAddress.toHexString())
   if (stakablePair === null) {
     // bail if the passed stakable token is not a registered pair (LP token)
-    log.error('could not get pair for address', [event.params.stakableTokenAddress.toString()])
+    log.error('could not get pair for address {}', [event.params.stakableTokenAddress.toHexString()])
     return
   }
   let context = dataSource.context()
@@ -219,7 +219,12 @@ export function handleRecovery(event: Recovered): void {
 }
 
 export function handleOwnershipTransfer(event: OwnershipTransferred): void {
-  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  let id = event.address.toHexString()
+  let campaign = LiquidityMiningCampaign.load(id)
+  if (campaign == null) {
+    log.warning('ownership transfer event for {} failed', [id])
+    return
+  }
   campaign.owner = event.params.newOwner
   campaign.save()
 }
