@@ -82,11 +82,11 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
   }
   if (network == 'arbitrum-one') {
     return [
-      '0xC3Ae0333F0F34aa734D5493276223d95B8F9Cb37', // DXD
+      '0xc3ae0333f0f34aa734d5493276223d95b8f9cb37', // DXD
       '0x82af49447d8a07e3bd95bd0d56f35241523fbab1', // WETH
-      '0xA970AF1a584579B618be4d69aD6F73459D112F95', // sUSD
-      '0x2e9a6Df78E42a30712c10a9Dc4b1C8656f8F2879', // MKR
-      '0xf97f4df75117a78c1A5a0DBb814Af92458539FB4', // LINK
+      '0xa970af1a584579b618be4d69ad6f73459d112f95', // sUSD
+      '0x2e9a6df78e42a30712c10a9dc4b1c8656f8f2879', // MKR
+      '0xf97f4df75117a78c1a5a0dbb814af92458539fb4', // LINK
       '0xde903e2712288a1da82942dddf2c20529565ac30', // SWPR
       '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8' // USDC
     ]
