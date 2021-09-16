@@ -11,7 +11,7 @@ import {
   fetchTokenDecimals,
   fetchTokenTotalSupply
 } from './helpers'
-import { getFactoryAddress } from '../commons/addresses'
+import { getFactoryAddress, getLiquidityTrackingTokenAddresses } from '../commons/addresses'
 
 export function handleNewPair(event: PairCreated): void {
   // load factory (create if first exchange)
@@ -60,6 +60,7 @@ export function handleNewPair(event: PairCreated): void {
     token0.totalLiquidity = ZERO_BD
     // token0.allPairs = []
     token0.txCount = ZERO_BI
+    token0.whitelistPairs = []
   }
 
   // fetch info if null
@@ -82,6 +83,7 @@ export function handleNewPair(event: PairCreated): void {
     token1.totalLiquidity = ZERO_BD
     // token1.allPairs = []
     token1.txCount = ZERO_BI
+    token1.whitelistPairs = []
   }
 
   let pair = new Pair(event.params.pair.toHexString()) as Pair
@@ -106,6 +108,19 @@ export function handleNewPair(event: PairCreated): void {
 
   // create the tracked contract based on the template
   PairTemplate.create(event.params.pair)
+
+  // save liquidity tracking pairs
+  let whitelist = getLiquidityTrackingTokenAddresses()
+  if (whitelist.includes(token0.id)) {
+    let newPairs = token1.whitelistPairs
+    newPairs.push(pair.id)
+    token1.whitelistPairs = newPairs
+  }
+  if (whitelist.includes(token1.id)) {
+    let newPairs = token0.whitelistPairs
+    newPairs.push(pair.id)
+    token0.whitelistPairs = newPairs
+  }
 
   // save updated values
   token0.save()

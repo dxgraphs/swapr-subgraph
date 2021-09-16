@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 import { Pair, Token, Bundle } from '../types/schema'
-import { BigDecimal, Address, BigInt, dataSource } from '@graphprotocol/graph-ts/index'
-import { ZERO_BD, factoryContract, ADDRESS_ZERO, ONE_BD } from './helpers'
+import { BigDecimal, BigInt, dataSource } from '@graphprotocol/graph-ts/index'
+import { ZERO_BD, ONE_BD } from './helpers'
 import {
   getDaiNativeCurrencyWrapperPairAddress,
   getUsdcNativeCurrencyWrapperPairAddress,
@@ -66,20 +66,18 @@ export function findNativeCurrencyPerToken(token: Token): BigDecimal {
   if (token.id == getNativeCurrencyWrapperAddress()) {
     return ONE_BD
   }
-  let whitelist = getLiquidityTrackingTokenAddresses()
+  let whitelist = token.whitelistPairs
   // loop through whitelist and check if paired with any
   for (let i = 0; i < whitelist.length; i++) {
-    let pairAddress = factoryContract.getPair(Address.fromString(token.id), Address.fromString(whitelist[i]))
-    if (pairAddress.toHexString() != ADDRESS_ZERO) {
-      let pair = Pair.load(pairAddress.toHexString())
-      if (pair.token0 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
-        let token1 = Token.load(pair.token1)
-        return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * native currency per token 1
-      }
-      if (pair.token1 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
-        let token0 = Token.load(pair.token0)
-        return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * native currency per token 0
-      }
+    let pairAddress = whitelist[i]
+    let pair = Pair.load(pairAddress)
+    if (pair.token0 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
+      let token1 = Token.load(pair.token1)
+      return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * native currency per token 1
+    }
+    if (pair.token1 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
+      let token0 = Token.load(pair.token0)
+      return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * native currency per token 0
     }
   }
   return ZERO_BD // nothing was found return 0

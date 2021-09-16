@@ -106,6 +106,8 @@ export function handleDistributionInitialization(event: Initialized): void {
       rewardToken.untrackedVolumeUSD = ZERO_BD
       rewardToken.totalLiquidity = ZERO_BD
       rewardToken.txCount = ZERO_BI
+      rewardToken.whitelistPairs = []
+      // FIXME: how to add whitelist pairs?
       rewardToken.save()
     }
     rewardAmounts.push(convertTokenToDecimal(eventRewardAmounts[index], rewardToken.decimals))

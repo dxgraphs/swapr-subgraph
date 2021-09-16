@@ -46,6 +46,8 @@ type Token @entity {
   # derived prices
   derivedNativeCurrency: BigDecimal
 
+  whitelistPairs: [Pair!]!
+
   # derived fields
   tokenDayData: [TokenDayData!]! @derivedFrom(field: "token")
   pairDayDataBase: [PairDayData!]! @derivedFrom(field: "token0")
