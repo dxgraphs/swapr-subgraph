@@ -286,6 +286,16 @@ export function handleSync(event: Sync): void {
 
 export function handleMint(event: Mint): void {
   let transaction = Transaction.load(event.transaction.hash.toHexString())
+  // FIXME: at this point the tx entity should have already been created, but for some reason this is not the case occasionally
+  if (transaction === null) {
+    transaction = new Transaction(event.transaction.hash.toHexString())
+    transaction.blockNumber = event.block.number
+    transaction.timestamp = event.block.timestamp
+    transaction.mints = []
+    transaction.burns = []
+    transaction.swaps = []
+  }
+
   let mints = transaction.mints
   let mint = MintEvent.load(mints[mints.length - 1])
 
