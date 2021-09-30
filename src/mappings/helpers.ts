@@ -11,7 +11,8 @@ import {
   LiquidityPositionSnapshot,
   Pair,
   LiquidityMiningCampaign,
-  LiquidityMiningPosition
+  LiquidityMiningPosition,
+  LiquidityMiningPositionSnapshot
 } from '../types/schema'
 import { Factory as FactoryContract } from '../types/templates/Pair/Factory'
 import { getFactoryAddress } from '../commons/addresses'
@@ -222,5 +223,33 @@ export function createLiquiditySnapshot(position: LiquidityPosition, event: ethe
   snapshot.liquidityTokenBalance = position.liquidityTokenBalance
   snapshot.liquidityPosition = position.id
   snapshot.save()
-  position.save()
+}
+
+export function createLiquidityMiningSnapshot(
+  position: LiquidityMiningPosition,
+  campaign: LiquidityMiningCampaign,
+  event: ethereum.Event
+): void {
+  let timestamp = event.block.timestamp.toI32()
+  let bundle = Bundle.load('1')
+  let pair = Pair.load(position.targetedPair)
+  let token0 = Token.load(pair.token0)
+  let token1 = Token.load(pair.token1)
+
+  // create new snapshot
+  let snapshot = new LiquidityMiningPositionSnapshot(position.id.concat(timestamp.toString()))
+  snapshot.liquidityMiningPosition = position.id
+  snapshot.liquidityMiningCampaign = campaign.id
+  snapshot.timestamp = timestamp
+  snapshot.block = event.block.number.toI32()
+  snapshot.user = position.user
+  snapshot.pair = position.targetedPair
+  snapshot.token0PriceUSD = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+  snapshot.token1PriceUSD = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+  snapshot.reserve0 = pair.reserve0
+  snapshot.reserve1 = pair.reserve1
+  snapshot.reserveUSD = pair.reserveUSD
+  snapshot.totalStakedLiquidityToken = campaign.stakedAmount
+  snapshot.stakedLiquidityTokenBalance = position.stakedAmount
+  snapshot.save()
 }

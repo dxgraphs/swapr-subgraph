@@ -136,6 +136,24 @@ type LiquidityPositionSnapshot @entity {
   liquidityTokenBalance: BigDecimal! # snapshot of users pool token balance
 }
 
+# saved over time, mainly to show overall lp token balance for a user in DXstats
+type LiquidityMiningPositionSnapshot @entity {
+  id: ID!
+  liquidityMiningPosition: LiquidityMiningPosition!
+  timestamp: Int! # saved for fast historical lookups
+  block: Int! # saved for fast historical lookups
+  user: User! # reference to user
+  pair: Pair! # reference to pair
+  liquidityMiningCampaign: LiquidityMiningCampaign! # reference to paircampaign
+  token0PriceUSD: BigDecimal! # snapshot of token0 price
+  token1PriceUSD: BigDecimal! # snapshot of token1 price
+  reserve0: BigDecimal! # snapshot of pair token0 reserves
+  reserve1: BigDecimal! # snapshot of pair token1 reserves
+  reserveUSD: BigDecimal! # snapshot of pair reserves in USD
+  totalStakedLiquidityToken: BigDecimal! # snapshot of pool token supply
+  stakedLiquidityTokenBalance: BigDecimal! # snapshot of users pool token balance
+}
+
 type Transaction @entity {
   id: ID! # txn hash
   blockNumber: BigInt!
@@ -329,6 +347,7 @@ type LiquidityMiningCampaign @entity {
   stakedAmount: BigDecimal!
   stakingCap: BigDecimal!
   liquidityMiningPositions: [LiquidityMiningPosition!]! @derivedFrom(field: "liquidityMiningCampaign")
+  liquidityMiningPositionSnapshots: [LiquidityMiningPositionSnapshot!]! @derivedFrom(field: "liquidityMiningCampaign")
   deposits: [Deposit!]! @derivedFrom(field: "liquidityMiningCampaign")
   withdrawals: [Withdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
   claims: [Claim!]! @derivedFrom(field: "liquidityMiningCampaign")

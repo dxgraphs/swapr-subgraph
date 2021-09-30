@@ -30,7 +30,8 @@ import {
   fetchTokenTotalSupply,
   fetchTokenDecimals,
   ZERO_BI,
-  getOrCreateLiquidityMiningPosition
+  getOrCreateLiquidityMiningPosition,
+  createLiquidityMiningSnapshot
 } from './helpers'
 import { findNativeCurrencyPerToken } from './pricing'
 import { getStakingRewardsFactoryAddress } from '../commons/addresses'
@@ -100,7 +101,7 @@ export function handleDistributionInitialization(event: Initialized): void {
         return
       }
       rewardToken.decimals = decimals
-      rewardToken.derivedNativeCurrency = findNativeCurrencyPerToken(rewardToken as Token)
+      rewardToken.derivedNativeCurrency = ZERO_BD
       rewardToken.tradeVolume = ZERO_BD
       rewardToken.tradeVolumeUSD = ZERO_BD
       rewardToken.untrackedVolumeUSD = ZERO_BD
@@ -143,14 +144,6 @@ export function handleDeposit(event: Staked): void {
   campaign.stakedAmount = campaign.stakedAmount.plus(stakedAmount)
   campaign.save()
 
-  // populating the stake deposit entity
-  let deposit = new Deposit(event.transaction.hash.toHexString())
-  deposit.liquidityMiningCampaign = campaign.id
-  deposit.user = event.params.staker
-  deposit.timestamp = event.block.timestamp
-  deposit.amount = stakedAmount
-  deposit.save()
-
   let position = getOrCreateLiquidityMiningPosition(
     campaign as LiquidityMiningCampaign,
     Pair.load(campaign.stakablePair) as Pair,
@@ -158,6 +151,16 @@ export function handleDeposit(event: Staked): void {
   )
   position.stakedAmount = position.stakedAmount.plus(stakedAmount)
   position.save()
+
+  createLiquidityMiningSnapshot(position, campaign as LiquidityMiningCampaign, event)
+
+  // populating the stake deposit entity
+  let deposit = new Deposit(event.transaction.hash.toHexString())
+  deposit.liquidityMiningCampaign = campaign.id
+  deposit.user = event.params.staker
+  deposit.timestamp = event.block.timestamp
+  deposit.amount = stakedAmount
+  deposit.save()
 }
 
 export function handleWithdrawal(event: Withdrawn): void {
@@ -166,14 +169,6 @@ export function handleWithdrawal(event: Withdrawn): void {
   campaign.stakedAmount = campaign.stakedAmount.minus(withdrawnAmount)
   campaign.save()
 
-  // populating the withdrawal entity
-  let withdrawal = new Withdrawal(event.transaction.hash.toHexString())
-  withdrawal.liquidityMiningCampaign = campaign.id
-  withdrawal.user = event.params.withdrawer
-  withdrawal.timestamp = event.block.timestamp
-  withdrawal.amount = withdrawnAmount
-  withdrawal.save()
-
   let position = getOrCreateLiquidityMiningPosition(
     campaign as LiquidityMiningCampaign,
     Pair.load(campaign.stakablePair) as Pair,
@@ -181,6 +176,16 @@ export function handleWithdrawal(event: Withdrawn): void {
   )
   position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
   position.save()
+
+  createLiquidityMiningSnapshot(position, campaign as LiquidityMiningCampaign, event)
+
+  // populating the withdrawal entity
+  let withdrawal = new Withdrawal(event.transaction.hash.toHexString())
+  withdrawal.liquidityMiningCampaign = campaign.id
+  withdrawal.user = event.params.withdrawer
+  withdrawal.timestamp = event.block.timestamp
+  withdrawal.amount = withdrawnAmount
+  withdrawal.save()
 }
 
 export function handleClaim(event: Claimed): void {
