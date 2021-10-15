@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, DataSourceContext, dataSource, Bytes, Address, BigDecimal } from '@graphprotocol/graph-ts'
+import { log, DataSourceContext, dataSource, Bytes, Address } from '@graphprotocol/graph-ts'
 import {
   SwaprStakingRewardsFactory,
   Pair,
@@ -8,7 +8,8 @@ import {
   Deposit,
   Withdrawal,
   Claim,
-  Recovery
+  Recovery,
+  LiquidityMiningCampaignReward
 } from '../types/schema'
 import { Distribution as DistributionTemplate } from '../types/templates'
 import { DistributionCreated } from '../types/StakingRewardsFactory/StakingRewardsFactory'
@@ -33,7 +34,6 @@ import {
   getOrCreateLiquidityMiningPosition,
   createLiquidityMiningSnapshot
 } from './helpers'
-import { findNativeCurrencyPerToken } from './pricing'
 import { getStakingRewardsFactoryAddress } from '../commons/addresses'
 
 export function handleDistributionCreation(event: DistributionCreated): void {
@@ -83,8 +83,7 @@ export function handleDistributionInitialization(event: Initialized): void {
   distribution.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18) // lp tokens have hardcoded 18 decimals
   let rewardTokenAddresses = event.params.rewardsTokenAddresses
   let eventRewardAmounts = event.params.rewardsAmounts
-  let rewardAmounts: BigDecimal[] = []
-  let rewardTokenIds: string[] = []
+  let rewards: string[] = []
   for (let index = 0; index < rewardTokenAddresses.length; index++) {
     let address: Address = rewardTokenAddresses[index]
     let hexTokenAddress = address.toHexString()
@@ -111,13 +110,17 @@ export function handleDistributionInitialization(event: Initialized): void {
       // FIXME: how to add whitelist pairs?
       rewardToken.save()
     }
-    rewardAmounts.push(convertTokenToDecimal(eventRewardAmounts[index], rewardToken.decimals))
-    rewardTokenIds.push(rewardToken.id)
+    let rewardId = hexDistributionAddress.concat('-').concat(hexTokenAddress)
+    let reward = LiquidityMiningCampaignReward.load(rewardId)
+    if (reward == null) reward = new LiquidityMiningCampaignReward(rewardId)
+    reward.token = hexTokenAddress
+    reward.amount = convertTokenToDecimal(eventRewardAmounts[index], rewardToken.decimals)
+    reward.save()
+    rewards.push(reward.id)
   }
   distribution.stakedAmount = ZERO_BD
   distribution.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18)
-  distribution.rewardAmounts = rewardAmounts
-  distribution.rewardTokens = rewardTokenIds
+  distribution.rewards = rewards
   distribution.initialized = true
   distribution.save()
 }
@@ -198,10 +201,11 @@ export function handleClaim(event: Claimed): void {
   claim.user = event.params.claimer
   claim.timestamp = event.block.timestamp
 
-  let distributionRewardTokens = campaign.rewardTokens
+  let distributionRewards = campaign.rewards
   let claimedAmounts = event.params.amounts
-  for (let i = 0; i < distributionRewardTokens.length; i++) {
-    let token = Token.load(distributionRewardTokens[i]) as Token
+  for (let i = 0; i < distributionRewards.length; i++) {
+    let reward = LiquidityMiningCampaignReward.load(distributionRewards[i]) as LiquidityMiningCampaignReward
+    let token = Token.load(reward.token) as Token
     claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
   }
   claim.save()
@@ -216,10 +220,11 @@ export function handleRecovery(event: Recovered): void {
   recovery.liquidityMiningCampaign = campaign.id
   recovery.timestamp = event.block.timestamp
 
-  let distributionRewardTokens = campaign.rewardTokens
+  let distributionRewards = campaign.rewards
   let recoveredAmounts = event.params.amounts
-  for (let i = 0; i < distributionRewardTokens.length; i++) {
-    let token = Token.load(distributionRewardTokens[i]) as Token
+  for (let i = 0; i < distributionRewards.length; i++) {
+    let reward = LiquidityMiningCampaignReward.load(distributionRewards[i]) as LiquidityMiningCampaignReward
+    let token = Token.load(reward.token) as Token
     recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
   }
   recovery.save()

@@ -331,6 +331,13 @@ type SwaprStakingRewardsFactory @entity {
   initializedCampaignsCount: Int!
 }
 
+# Liquidity mining campaign reward
+type LiquidityMiningCampaignReward @entity {
+  id: ID!
+  token: Token!
+  amount: BigDecimal!
+}
+
 # Liquidity mining campaign
 type LiquidityMiningCampaign @entity {
   # campaign address
@@ -342,8 +349,7 @@ type LiquidityMiningCampaign @entity {
   duration: BigInt!
   locked: Boolean!
   stakablePair: Pair!
-  rewardTokens: [Token!]!
-  rewardAmounts: [BigDecimal!]!
+  rewards: [LiquidityMiningCampaignReward!]!
   stakedAmount: BigDecimal!
   stakingCap: BigDecimal!
   liquidityMiningPositions: [LiquidityMiningPosition!]! @derivedFrom(field: "liquidityMiningCampaign")

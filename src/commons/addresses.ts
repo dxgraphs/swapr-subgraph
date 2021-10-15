@@ -7,7 +7,7 @@ export function getFactoryAddress(): string {
   let network = dataSource.network() as string
   // not using a switch-case because using strings is not yet supported (only u32)
   if (network == 'mainnet') return '0xd34971BaB6E5E356fd250715F5dE0492BB070452'
-  if (network == 'rinkeby') return '0x02f45e773436C6D96Cc73600fe94a660ec67734C'
+  if (network == 'rinkeby') return '0x1d354f628bf088cc28a59aef4a47fbe14aa9985b'
   if (network == 'xdai') return '0x5d48c95adffd4b40c1aaadc4e08fc44117e02179'
   if (network == 'arbitrum-one') return '0x359f20ad0f42d75a5077e65f30274cabe6f4f01a'
   if (network == 'arbitrum-rinkeby') return '0x5c702fbbcfb8ef5cc70c4e4341aa437ef9d55281'
@@ -19,7 +19,7 @@ export function getStakingRewardsFactoryAddress(): string {
   let network = dataSource.network() as string
   // not using a switch-case because using strings is not yet supported (only u32)
   if (network == 'mainnet') return '0x156f0568a6ce827e5d39f6768a5d24b694e1ea7b'
-  if (network == 'rinkeby') return '0x163a3640ce993a0b4c11885a6d4dac16dfc188e1'
+  if (network == 'rinkeby') return '0x0f9e49d473b813abe33f1bab11fa9e16ee850eba'
   if (network == 'xdai') return '0xa039793af0bb060c597362e8155a0327d9b8bee8'
   if (network == 'arbitrum-one') return '0xeca7f78d59d16812948849663b26fe10e320f80c'
   if (network == 'arbitrum-rinkeby') return '0x55bfae77d9980702e5b60d984983ae3b776ab91c'
@@ -64,7 +64,8 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
       '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f', // SNX
       '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e', // YFI
       '0xdf5e0e81dff6faf3a7e52ba697820c5e32d806a8', // yCurv
-      '0xd533a949740bb3306d119cc777fa900ba034cd52' // CRV
+      '0xd533a949740bb3306d119cc777fa900ba034cd52', // CRV
+      '0x6cAcDB97e3fC8136805a9E7c342d866ab77D0957' // SWPR
     ]
   }
   if (network == 'rinkeby') {
