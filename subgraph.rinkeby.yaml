@@ -8,9 +8,9 @@ dataSources:
     name: Factory
     network: rinkeby
     source:
-      address: '0x02f45e773436C6D96Cc73600fe94a660ec67734C'
+      address: '0x1d354f628bf088cc28a59aef4a47fbe14aa9985b'
       abi: Factory
-      startBlock: 7553048
+      startBlock: 9229705
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -35,9 +35,9 @@ dataSources:
     name: StakingRewardsFactory
     network: rinkeby
     source:
-      address: '0x163a3640Ce993A0b4c11885a6D4dAc16DFC188e1'
+      address: '0x0f9e49d473b813abe33f1bab11fa9e16ee850eba'
       abi: StakingRewardsFactory
-      startBlock: 8572717
+      startBlock: 9229714
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
