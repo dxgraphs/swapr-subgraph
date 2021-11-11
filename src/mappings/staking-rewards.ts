@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, DataSourceContext, dataSource, Bytes, Address } from '@graphprotocol/graph-ts'
+import { log, DataSourceContext, dataSource, Bytes, Address, BigDecimal } from '@graphprotocol/graph-ts'
 import {
   SwaprStakingRewardsFactory,
   Pair,
@@ -62,7 +62,7 @@ export function handleDistributionInitialization(event: Initialized): void {
   let stakablePair = Pair.load(event.params.stakableTokenAddress.toHexString())
   if (stakablePair === null) {
     // bail if the passed stakable token is not a registered pair (LP token)
-    log.error('could not get pair for address {}', [event.params.stakableTokenAddress.toHexString()])
+    log.warning('could not get pair for address {}', [event.params.stakableTokenAddress.toHexString()])
     return
   }
   let context = dataSource.context()
@@ -143,6 +143,10 @@ export function handleDistributionCancelation(event: Canceled): void {
 
 export function handleDeposit(event: Staked): void {
   let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  if (campaign == null) {
+    log.error('non existent campaign {}', [event.address.toHexString()])
+    return
+  }
   let stakedAmount = convertTokenToDecimal(event.params.amount, BI_18) // lp tokens have hardcoded 18 decimals
   campaign.stakedAmount = campaign.stakedAmount.plus(stakedAmount)
   campaign.save()
@@ -168,6 +172,10 @@ export function handleDeposit(event: Staked): void {
 
 export function handleWithdrawal(event: Withdrawn): void {
   let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  if (campaign == null) {
+    log.error('non existent campaign {}', [event.address.toHexString()])
+    return
+  }
   let withdrawnAmount = convertTokenToDecimal(event.params.amount, BI_18)
   campaign.stakedAmount = campaign.stakedAmount.minus(withdrawnAmount)
   campaign.save()
@@ -193,6 +201,10 @@ export function handleWithdrawal(event: Withdrawn): void {
 
 export function handleClaim(event: Claimed): void {
   let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  if (campaign == null) {
+    log.error('non existent campaign {}', [event.address.toHexString()])
+    return
+  }
 
   // populating the claim entity
   let claim = new Claim(event.transaction.hash.toHexString())
@@ -213,6 +225,10 @@ export function handleClaim(event: Claimed): void {
 
 export function handleRecovery(event: Recovered): void {
   let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
+  if (campaign == null) {
+    log.error('non existent campaign {}', [event.address.toHexString()])
+    return
+  }
 
   // populating the recovery entity
   let recovery = new Recovery(event.transaction.hash.toHexString())
