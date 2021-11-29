@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, DataSourceContext, dataSource, Bytes, Address, BigDecimal } from '@graphprotocol/graph-ts'
+import { log, DataSourceContext, dataSource, Bytes, Address, BigDecimal, BigInt } from '@graphprotocol/graph-ts'
 import {
   SwaprStakingRewardsFactory,
   Pair,
@@ -9,7 +9,9 @@ import {
   Withdrawal,
   Claim,
   Recovery,
-  LiquidityMiningCampaignReward
+  LiquidityMiningCampaignReward,
+  SingleSidedStakingCampaign,
+  SingleSidedStakingCampaignReward
 } from '../types/schema'
 import { Distribution as DistributionTemplate } from '../types/templates'
 import { DistributionCreated } from '../types/StakingRewardsFactory/StakingRewardsFactory'
@@ -26,21 +28,39 @@ import {
   convertTokenToDecimal,
   ZERO_BD,
   BI_18,
-  fetchTokenSymbol,
-  fetchTokenName,
-  fetchTokenTotalSupply,
-  fetchTokenDecimals,
-  ZERO_BI,
   getOrCreateLiquidityMiningPosition,
   createLiquidityMiningSnapshot
 } from './helpers'
-import { getStakingRewardsFactoryAddress } from '../commons/addresses'
+import { getStakingRewardsFactoryAddress, isSwaprToken } from '../commons/addresses'
+import { createOrGetToken } from '../commons/token'
 
 export function handleDistributionCreation(event: DistributionCreated): void {
   let context = new DataSourceContext()
   context.setString('owner', event.params.owner.toHexString())
   context.setString('address', event.params.deployedAt.toHexString())
   DistributionTemplate.createWithContext(event.params.deployedAt, context)
+}
+
+export function getFirstFromAddressArray(list: Address[]): Address {
+  let address: Address
+
+  for (let index = 0; index < list.length; index++) {
+    address = list[index]
+    break
+  }
+
+  return address
+}
+
+export function getFirstFromBigIntArray(list: BigInt[]): BigInt {
+  let singleValue: BigInt
+
+  for (let index = 0; index < list.length; index++) {
+    singleValue = list[index]
+    break
+  }
+
+  return singleValue
 }
 
 export function handleDistributionInitialization(event: Initialized): void {
@@ -53,6 +73,41 @@ export function handleDistributionInitialization(event: Initialized): void {
   }
   factory.initializedCampaignsCount = factory.initializedCampaignsCount + 1
   factory.save()
+
+  // If the campaign is a Single Sided Staking campaign
+  if (
+    event.params.rewardsTokenAddresses.length == 1 &&
+    isSwaprToken(getFirstFromAddressArray(event.params.rewardsTokenAddresses))
+  ) {
+    // the contract
+    let context = dataSource.context()
+
+    let sssCampaign = new SingleSidedStakingCampaign(event.address.toHexString())
+    sssCampaign.initialized = true
+    sssCampaign.owner = Bytes.fromHexString(context.getString('owner')) as Bytes
+    sssCampaign.startsAt = event.params.startingTimestamp
+    sssCampaign.endsAt = event.params.endingTimestamp
+    sssCampaign.duration = sssCampaign.endsAt.minus(sssCampaign.startsAt)
+    sssCampaign.locked = event.params.locked
+    {
+      // Linked: Stake token entity
+      let stakeToken = createOrGetToken(event.params.stakableTokenAddress)
+      sssCampaign.stakeToken = stakeToken.id.toString()
+    }
+    {
+      // Linked: Create Single Sided Staking Campaign Reward entity
+      let sssCampaignReward = new SingleSidedStakingCampaignReward(event.transaction.hash.toHexString())
+      sssCampaignReward.amount = getFirstFromBigIntArray(event.params.rewardsAmounts).toBigDecimal()
+      let rewardToken = createOrGetToken(getFirstFromAddressArray(event.params.rewardsTokenAddresses))
+      sssCampaignReward.token = rewardToken.id
+      sssCampaign.reward = sssCampaignReward.id
+    }
+    sssCampaign.stakedAmount = ZERO_BD
+    sssCampaign.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18) // lp tokens have hardcoded 18 decimals
+    // Save and exit
+    sssCampaign.save()
+    return
+  }
 
   if (event.params.rewardsTokenAddresses.length !== event.params.rewardsAmounts.length) {
     // bail if the passed reward-related arrays have a different length
