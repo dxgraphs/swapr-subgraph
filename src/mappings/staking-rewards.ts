@@ -87,29 +87,7 @@ export function handleDistributionInitialization(event: Initialized): void {
   for (let index = 0; index < rewardTokenAddresses.length; index++) {
     let address: Address = rewardTokenAddresses[index]
     let hexTokenAddress = address.toHexString()
-    let rewardToken = Token.load(hexTokenAddress)
-    if (rewardToken === null) {
-      rewardToken = new Token(hexTokenAddress)
-      rewardToken.symbol = fetchTokenSymbol(address)
-      rewardToken.name = fetchTokenName(address)
-      rewardToken.totalSupply = fetchTokenTotalSupply(address)
-      let decimals = fetchTokenDecimals(address)
-      // bail if we couldn't figure out the decimals
-      if (decimals === null) {
-        log.error('cannot retrieve token decimal value', [])
-        return
-      }
-      rewardToken.decimals = decimals
-      rewardToken.derivedNativeCurrency = ZERO_BD
-      rewardToken.tradeVolume = ZERO_BD
-      rewardToken.tradeVolumeUSD = ZERO_BD
-      rewardToken.untrackedVolumeUSD = ZERO_BD
-      rewardToken.totalLiquidity = ZERO_BD
-      rewardToken.txCount = ZERO_BI
-      rewardToken.whitelistPairs = []
-      // FIXME: how to add whitelist pairs?
-      rewardToken.save()
-    }
+    let rewardToken = createOrGetToken(address)
     let rewardId = hexDistributionAddress.concat('-').concat(hexTokenAddress)
     let reward = LiquidityMiningCampaignReward.load(rewardId)
     if (reward == null) reward = new LiquidityMiningCampaignReward(rewardId)
