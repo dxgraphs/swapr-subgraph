@@ -33,6 +33,7 @@ import {
 } from './helpers'
 import { getStakingRewardsFactoryAddress, isSwaprToken } from '../commons/addresses'
 import { createOrGetToken } from '../commons/token'
+import { getFirstFromAddressArray, getFirstFromBigIntArray } from '../commons/helpers'
 
 export function handleDistributionCreation(event: DistributionCreated): void {
   let context = new DataSourceContext()
@@ -41,27 +42,6 @@ export function handleDistributionCreation(event: DistributionCreated): void {
   DistributionTemplate.createWithContext(event.params.deployedAt, context)
 }
 
-export function getFirstFromAddressArray(list: Address[]): Address {
-  let address: Address
-
-  for (let index = 0; index < list.length; index++) {
-    address = list[index]
-    break
-  }
-
-  return address
-}
-
-export function getFirstFromBigIntArray(list: BigInt[]): BigInt {
-  let singleValue: BigInt
-
-  for (let index = 0; index < list.length; index++) {
-    singleValue = list[index]
-    break
-  }
-
-  return singleValue
-}
 
 export function handleDistributionInitialization(event: Initialized): void {
   // load factory (create if first distribution)
