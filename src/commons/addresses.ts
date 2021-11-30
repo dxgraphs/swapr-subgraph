@@ -140,24 +140,27 @@ export function getUsdtNativeCurrencyWrapperPair(): string {
 }
 
 /**
- * Swapr
+ * Swapr token address, supported network: Mainnet, Arbitrum One, xDAI, Rinkeby, and Arbitrum Rinkeby
  */
-export abstract class SwaprAddress {
+export function getSwaprTokenAddress(): string {
+  let network = dataSource.network() as string
   // Production
-  // Testnets
-  static mainnet: string = '0x6cAcDB97e3fC8136805a9E7c342d866ab77D0957'
-  // static 'arbitrum-one': string = '0xdE903E2712288A1dA82942DDdF2c20529565aC30'
-  static xdai: string = '0x532801ED6f82FFfD2DAB70A19fC2d7B2772C4f4b'
-  static rinkeby: string = '0x022E292b44B5a146F2e8ee36Ff44D3dd863C915c'
-  // static 'arbitrum-rinkeby': string = '0xdE903E2712288A1dA82942DDdF2c20529565aC30'
+  if (network == 'mainnet') return '0x6cAcDB97e3fC8136805a9E7c342d866ab77D0957'
+  if (network == 'arbitrum-one') return '0xdE903E2712288A1dA82942DDdF2c20529565aC30'
+  if (network == 'xdai') return '0x532801ED6f82FFfD2DAB70A19fC2d7B2772C4f4b'
+  /**
+   * @todo get the correct addreses
+   */
+  if (network == 'arbitrum-rinkeby') return '0xdE903E2712288A1dA82942DDdF2c20529565aC30'
+  if (network == 'rinkeby') return '0xdE903E2712288A1dA82942DDdF2c20529565aC30'
 }
 
 /**
- *
+ * Checks if the token address is a Swapr token
  * @param address
  */
 export function isSwaprToken(address: Address): boolean {
   // let network = dataSource.network() as string;
   // for now, treat everything as true value
-  return true
+  return address.toHexString() == getSwaprTokenAddress()
 }
