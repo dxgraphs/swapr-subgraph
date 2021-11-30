@@ -100,7 +100,10 @@ export function handleDistributionInitialization(event: Initialized): void {
       sssCampaignReward.amount = getFirstFromBigIntArray(event.params.rewardsAmounts).toBigDecimal()
       let rewardToken = createOrGetToken(getFirstFromAddressArray(event.params.rewardsTokenAddresses))
       sssCampaignReward.token = rewardToken.id
+        sssCampaignReward.save()
+        // Link entries to main entity
       sssCampaign.reward = sssCampaignReward.id
+        sssCampaign.rewardToken = rewardToken.id
     }
     sssCampaign.stakedAmount = ZERO_BD
     sssCampaign.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18) // lp tokens have hardcoded 18 decimals
