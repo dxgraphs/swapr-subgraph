@@ -367,23 +367,6 @@ type SingleSidedStakingCampaignReward @entity {
   amount: BigDecimal!
 }
 
-# Single Sided Staking campaign
-type SingleSidedStakingCampaign @entity {
-  # campaign address
-  id: ID!
-  initialized: Boolean!
-  owner: Bytes!
-  startsAt: BigInt!
-  endsAt: BigInt!
-  duration: BigInt!
-  locked: Boolean!
-  stakeToken: Token!
-  rewardToken: Token!
-  reward: SingleSidedStakingCampaignReward!
-  stakedAmount: BigDecimal!
-  stakingCap: BigDecimal!
-}
-
 # LP tokens staking
 type Deposit @entity {
   id: ID!
@@ -417,4 +400,68 @@ type Recovery @entity {
   timestamp: BigInt!
   liquidityMiningCampaign: LiquidityMiningCampaign!
   amounts: [BigDecimal!]!
+}
+
+# Single Sided Staking campaign
+type SingleSidedStakingCampaign @entity {
+  # campaign address
+  id: ID!
+  initialized: Boolean!
+  owner: Bytes!
+  startsAt: BigInt!
+  endsAt: BigInt!
+  duration: BigInt!
+  locked: Boolean!
+  stakeToken: Token!
+  rewardToken: Token!
+  reward: SingleSidedStakingCampaignReward!
+  stakedAmount: BigDecimal!
+  stakingCap: BigDecimal!
+  singleSidedStakingPositions: [SingleSidedStakingCampaignPosition!]! @derivedFrom(field: "singleSidedStakingCampaign")
+  deposits: [SingleSidedStakingCampaignDeposit!]! @derivedFrom(field: "singleSidedStakingCampaign")
+  withdrawals: [SingleSidedStakingCampaignWithdrawal!]! @derivedFrom(field: "singleSidedStakingCampaign")
+  claims: [SingleSidedStakingCampaignClaim!]! @derivedFrom(field: "singleSidedStakingCampaign")
+  recoveries: [SingleSidedStakingCampaignRecovery!]! @derivedFrom(field: "singleSidedStakingCampaign")
+}
+
+# LP tokens staking
+type SingleSidedStakingCampaignDeposit @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  singleSidedStakingCampaign: SingleSidedStakingCampaign!
+  amount: BigDecimal!
+}
+
+# LP tokens withdrawing
+type SingleSidedStakingCampaignWithdrawal @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  singleSidedStakingCampaign: SingleSidedStakingCampaign!
+  amount: BigDecimal!
+}
+
+# Reward tokens claiming
+type SingleSidedStakingCampaignClaim @entity {
+  id: ID!
+  user: Bytes!
+  timestamp: BigInt!
+  singleSidedStakingCampaign: SingleSidedStakingCampaign!
+  amounts: [BigDecimal!]!
+}
+
+# Reward tokens recovery from distribution owner
+type SingleSidedStakingCampaignRecovery @entity {
+  id: ID!
+  timestamp: BigInt!
+  singleSidedStakingCampaign: SingleSidedStakingCampaign!
+  amounts: [BigDecimal!]!
+}
+
+type SingleSidedStakingCampaignPosition @entity {
+  id: ID!
+  user: User!
+  stakedAmount: BigDecimal!
+  singleSidedStakingCampaign: SingleSidedStakingCampaign!
 }
