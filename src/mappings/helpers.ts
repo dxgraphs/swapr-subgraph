@@ -14,10 +14,11 @@ import {
   LiquidityMiningPosition,
   LiquidityMiningPositionSnapshot,
   SingleSidedStakingCampaign,
-  SingleSidedStakingCampaignPosition
+  SingleSidedStakingCampaignPosition,
+  SwaprStakingRewardsFactory
 } from '../types/schema'
 import { Factory as FactoryContract } from '../types/templates/Pair/Factory'
-import { getFactoryAddress } from '../commons/addresses'
+import { getFactoryAddress, getStakingRewardsFactoryAddress } from '../commons/addresses'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -285,4 +286,20 @@ export function createLiquidityMiningSnapshot(
   snapshot.totalStakedLiquidityToken = campaign.stakedAmount
   snapshot.stakedLiquidityTokenBalance = position.stakedAmount
   snapshot.save()
+}
+
+/**
+ * Retrieves the SwaprStakingRewardsFactory, creates a one if none exists
+ */
+export function getSwaprStakingRewardsFactory(): SwaprStakingRewardsFactory {
+  // load factory (create if first distribution)
+  let stakingRewardsFactoryAddress = getStakingRewardsFactoryAddress()
+  let factory = SwaprStakingRewardsFactory.load(stakingRewardsFactoryAddress)
+  if (factory === null) {
+    factory = new SwaprStakingRewardsFactory(stakingRewardsFactoryAddress)
+    factory.initializedCampaignsCount = 0
+    factory.save()
+  }
+
+  return factory as SwaprStakingRewardsFactory
 }

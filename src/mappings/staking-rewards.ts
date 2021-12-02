@@ -1,7 +1,6 @@
 /* eslint-disable prefer-const */
 import { log, DataSourceContext, dataSource, Bytes, Address, BigDecimal, BigInt } from '@graphprotocol/graph-ts'
 import {
-  SwaprStakingRewardsFactory,
   Pair,
   Token,
   LiquidityMiningCampaign,
@@ -31,9 +30,10 @@ import {
   BI_18,
   getOrCreateLiquidityMiningPosition,
   createLiquidityMiningSnapshot,
+  getSwaprStakingRewardsFactory,
   getOrCreateSingleSidedStakingCampaignPosition
 } from './helpers'
-import { getStakingRewardsFactoryAddress, isSwaprToken } from '../commons/addresses'
+import { isSwaprToken } from '../commons/addresses'
 import { createOrGetToken } from '../commons/token'
 import { getFirstFromAddressArray, getFirstFromBigIntArray } from '../commons/helpers'
 
@@ -45,12 +45,10 @@ export function handleDistributionCreation(event: DistributionCreated): void {
 }
 
 export function handleDistributionInitialization(event: Initialized): void {
-  // load factory (create if first distribution)
-  let stakingRewardsFactoryAddress = getStakingRewardsFactoryAddress()
-  let factory = SwaprStakingRewardsFactory.load(stakingRewardsFactoryAddress)
+  let factory = getSwaprStakingRewardsFactory()
   if (factory === null) {
-    factory = new SwaprStakingRewardsFactory(stakingRewardsFactoryAddress)
-    factory.initializedCampaignsCount = 0
+    // bail if factory is null
+    return log.error('factory must be initialized when canceling a distribution', [])
   }
   factory.initializedCampaignsCount = factory.initializedCampaignsCount + 1
   factory.save()
@@ -143,17 +141,24 @@ export function handleDistributionInitialization(event: Initialized): void {
 }
 
 export function handleDistributionCancelation(event: Canceled): void {
-  // load factory (create if first distribution)
-  let factory = SwaprStakingRewardsFactory.load(getStakingRewardsFactoryAddress())
+  let campaignId = event.address.toHexString()
+
+  let factory = getSwaprStakingRewardsFactory()
   if (factory === null) {
     // bail if factory is null
-    log.error('factory must be initialized when canceling a distribution', [])
-    return
+    return log.error('factory must be initialized when canceling a distribution', [])
   }
   factory.initializedCampaignsCount = factory.initializedCampaignsCount - 1
   factory.save()
-
-  let canceledDistribution = LiquidityMiningCampaign.load(event.address.toHexString())
+  // Try to fetch LMCampaign, default back to SSSCampagin
+  let canceledDistribution = LiquidityMiningCampaign.load(campaignId)
+  if (canceledDistribution) {
+    // @ts-ignore
+    canceledDistribution = SingleSidedStakingCampaign.load(campaignId) as SingleSidedStakingCampaign
+  }
+  if (canceledDistribution == null) {
+    return log.error('could not find distribution at {}', [campaignId])
+  }
   canceledDistribution.initialized = false
   canceledDistribution.save()
 }
