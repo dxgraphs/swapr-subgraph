@@ -11,7 +11,8 @@ import {
   LiquidityMiningCampaignReward,
   SingleSidedStakingCampaign,
   SingleSidedStakingCampaignReward,
-  SingleSidedStakingCampaignDeposit
+  SingleSidedStakingCampaignDeposit,
+  SingleSidedStakingCampaignWithdrawal
 } from '../types/schema'
 import { Distribution as DistributionTemplate } from '../types/templates'
 import { DistributionCreated } from '../types/StakingRewardsFactory/StakingRewardsFactory'
@@ -225,32 +226,55 @@ export function handleDeposit(event: Staked): void {
 }
 
 export function handleWithdrawal(event: Withdrawn): void {
-  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
-  if (campaign == null) {
-    log.error('non existent campaign {}', [event.address.toHexString()])
+  let campaignId = event.address.toHexString()
+  let lmCampaign = LiquidityMiningCampaign.load(campaignId)
+  let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
+  // Early exit
+  if (lmCampaign == null && sssCampaign == null) {
+    log.error('non existent campaign {}', [campaignId])
     return
   }
-  let withdrawnAmount = convertTokenToDecimal(event.params.amount, BI_18)
-  campaign.stakedAmount = campaign.stakedAmount.minus(withdrawnAmount)
-  campaign.save()
-
-  let position = getOrCreateLiquidityMiningPosition(
-    campaign as LiquidityMiningCampaign,
-    Pair.load(campaign.stakablePair) as Pair,
-    event.params.withdrawer
-  )
-  position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
-  position.save()
-
-  createLiquidityMiningSnapshot(position, campaign as LiquidityMiningCampaign, event)
-
-  // populating the withdrawal entity
-  let withdrawal = new Withdrawal(event.transaction.hash.toHexString())
-  withdrawal.liquidityMiningCampaign = campaign.id
-  withdrawal.user = event.params.withdrawer
-  withdrawal.timestamp = event.block.timestamp
-  withdrawal.amount = withdrawnAmount
-  withdrawal.save()
+  // Handle LMCampaign
+  if (lmCampaign) {
+    let withdrawnAmount = convertTokenToDecimal(event.params.amount, BI_18)
+    lmCampaign.stakedAmount = lmCampaign.stakedAmount.minus(withdrawnAmount)
+    let position = getOrCreateLiquidityMiningPosition(
+      lmCampaign as LiquidityMiningCampaign,
+      Pair.load(lmCampaign.stakablePair) as Pair,
+      event.params.withdrawer
+    )
+    position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
+    createLiquidityMiningSnapshot(position, lmCampaign as LiquidityMiningCampaign, event)
+    // populating the withdrawal entity
+    let withdrawal = new Withdrawal(event.transaction.hash.toHexString())
+    withdrawal.liquidityMiningCampaign = campaignId
+    withdrawal.user = event.params.withdrawer
+    withdrawal.timestamp = event.block.timestamp
+    withdrawal.amount = withdrawnAmount
+    // save transaction
+    withdrawal.save()
+    position.save()
+    lmCampaign.save()
+    return
+  }
+  // Handle SSSCampaign
+  if (sssCampaign) {
+    let withdrawnAmount = convertTokenToDecimal(event.params.amount, BI_18)
+    sssCampaign.stakedAmount = sssCampaign.stakedAmount.minus(withdrawnAmount)
+    let position = getOrCreateSingleSidedStakingCampaignPosition(sssCampaign, event.params.withdrawer)
+    position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
+    // populating the withdrawal entity
+    let withdrawal = new SingleSidedStakingCampaignWithdrawal(event.transaction.hash.toHexString())
+    withdrawal.singleSidedStakingCampaign = campaignId
+    withdrawal.user = event.params.withdrawer
+    withdrawal.timestamp = event.block.timestamp
+    withdrawal.amount = withdrawnAmount
+    // save transaction
+    withdrawal.save()
+    position.save()
+    lmCampaign.save()
+    return
+  }
 }
 
 export function handleClaim(event: Claimed): void {
