@@ -263,19 +263,19 @@ export function handleRecovery(event: Recovered): void {
 }
 
 export function handleOwnershipTransfer(event: OwnershipTransferred): void {
-  let campaigId = event.address.toHexString()
+  let campaignId = event.address.toHexString()
   // Attempt to fetch the campaign
-  let lmCampaign = LiquidityMiningCampaign.load(campaigId)
+  let lmCampaign = LiquidityMiningCampaign.load(campaignId)
   if (lmCampaign) {
     lmCampaign.owner = event.params.newOwner
     return lmCampaign.save()
   }
   // Attempt to SingleSidedStakingCampaign
-  let sssCampaign = SingleSidedStakingCampaign.load(campaigId)
+  let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
   if (sssCampaign) {
     sssCampaign.owner = event.params.newOwner
     return sssCampaign.save()
   }
   // Ethier campaigns don't exist
-  log.warning('ownership transfer event for {} failed', [campaigId])
+  log.warning('ownership transfer event for {} failed', [campaignId])
 }
