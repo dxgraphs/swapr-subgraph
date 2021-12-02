@@ -48,7 +48,8 @@ export function handleDistributionInitialization(event: Initialized): void {
   let factory = getSwaprStakingRewardsFactory()
   if (factory === null) {
     // bail if factory is null
-    return log.error('factory must be initialized when canceling a distribution', [])
+    log.error('factory must be initialized when canceling a distribution', [])
+    return
   }
   factory.initializedCampaignsCount = factory.initializedCampaignsCount + 1
   factory.save()
@@ -194,7 +195,8 @@ export function handleDeposit(event: Staked): void {
     deposit.user = event.params.staker
     deposit.timestamp = event.block.timestamp
     deposit.amount = stakedAmount
-    return deposit.save()
+    deposit.save()
+    return
   }
 
   // Handle type of SingleSidedStakingCampaign
@@ -215,7 +217,8 @@ export function handleDeposit(event: Staked): void {
     deposit.user = event.params.staker
     deposit.timestamp = event.block.timestamp
     deposit.amount = stakedAmount
-    return deposit.save()
+    deposit.save()
+    return
   }
 
   log.error('non existent campaign {}', [campaignId])
@@ -303,13 +306,15 @@ export function handleOwnershipTransfer(event: OwnershipTransferred): void {
   let lmCampaign = LiquidityMiningCampaign.load(campaignId)
   if (lmCampaign) {
     lmCampaign.owner = event.params.newOwner
-    return lmCampaign.save()
+    lmCampaign.save()
+    return
   }
   // Attempt to SingleSidedStakingCampaign
   let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
   if (sssCampaign) {
     sssCampaign.owner = event.params.newOwner
-    return sssCampaign.save()
+    sssCampaign.save()
+    return
   }
   // Ethier campaigns don't exist
   log.warning('ownership transfer event for {} failed', [campaignId])
