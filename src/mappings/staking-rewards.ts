@@ -12,7 +12,8 @@ import {
   SingleSidedStakingCampaign,
   SingleSidedStakingCampaignReward,
   SingleSidedStakingCampaignDeposit,
-  SingleSidedStakingCampaignWithdrawal
+  SingleSidedStakingCampaignWithdrawal,
+  SingleSidedStakingCampaignClaim
 } from '../types/schema'
 import { Distribution as DistributionTemplate } from '../types/templates'
 import { DistributionCreated } from '../types/StakingRewardsFactory/StakingRewardsFactory'
@@ -278,27 +279,44 @@ export function handleWithdrawal(event: Withdrawn): void {
 }
 
 export function handleClaim(event: Claimed): void {
-  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
-  if (campaign == null) {
-    log.error('non existent campaign {}', [event.address.toHexString()])
+  let campaignId = event.address.toHexString()
+  let lmCampaign = LiquidityMiningCampaign.load(campaignId)
+  let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
+  if (lmCampaign) {
+    let claim = new Claim(event.transaction.hash.toHexString())
+    claim.amounts = []
+    // refer to Liquidty Mining Campaign
+    claim.liquidityMiningCampaign = lmCampaign.id
+    claim.user = event.params.claimer
+    claim.timestamp = event.block.timestamp
+    let distributionRewards = lmCampaign.rewards
+    let claimedAmounts = event.params.amounts
+    for (let i = 0; i < distributionRewards.length; i++) {
+      let reward = LiquidityMiningCampaignReward.load(distributionRewards[i]) as LiquidityMiningCampaignReward
+      let token = Token.load(reward.token) as Token
+      claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
+    }
+    claim.save()
     return
   }
-
-  // populating the claim entity
-  let claim = new Claim(event.transaction.hash.toHexString())
-  claim.amounts = []
-  claim.liquidityMiningCampaign = campaign.id
-  claim.user = event.params.claimer
-  claim.timestamp = event.block.timestamp
-
-  let distributionRewards = campaign.rewards
-  let claimedAmounts = event.params.amounts
-  for (let i = 0; i < distributionRewards.length; i++) {
-    let reward = LiquidityMiningCampaignReward.load(distributionRewards[i]) as LiquidityMiningCampaignReward
-    let token = Token.load(reward.token) as Token
-    claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
-  }
+  if (sssCampaign) {
+    let claim = new SingleSidedStakingCampaignClaim(event.transaction.hash.toHexString())
+    claim.amounts = []
+    // refer to Liquidty Mining Campaign
+    claim.singleSidedStakingCampaign = sssCampaign.id
+    claim.user = event.params.claimer
+    claim.timestamp = event.block.timestamp
+    let distributionRewards = sssCampaign.rewards
+    let claimedAmounts = event.params.amounts
+    for (let i = 0; i < distributionRewards.length; i++) {
+      let reward = SingleSidedStakingCampaignReward.load(distributionRewards[i])
+      let token = Token.load(reward.token) as Token
+      claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
+    }
   claim.save()
+    return
+  }
+  log.error('non existent campaign {}', [campaignId])
 }
 
 export function handleRecovery(event: Recovered): void {
