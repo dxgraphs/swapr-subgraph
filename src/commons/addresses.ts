@@ -164,5 +164,5 @@ export function getSwaprTokenAddress(): string {
 export function isSwaprToken(address: Address): boolean {
   // let network = dataSource.network() as string;
   // for now, treat everything as true value
-  return address.toHexString().toLocaleLowerCase() == getSwaprTokenAddress().toLocaleLowerCase()
+  return address.toHexString() == getSwaprTokenAddress()
 }
