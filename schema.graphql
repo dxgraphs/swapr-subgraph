@@ -414,7 +414,7 @@ type SingleSidedStakingCampaign @entity {
   locked: Boolean!
   stakeToken: Token!
   rewardToken: Token!
-  reward: SingleSidedStakingCampaignReward!
+  rewards: [SingleSidedStakingCampaignReward]!
   stakedAmount: BigDecimal!
   stakingCap: BigDecimal!
   singleSidedStakingPositions: [SingleSidedStakingCampaignPosition!]! @derivedFrom(field: "singleSidedStakingCampaign")
