@@ -142,25 +142,29 @@ export function handleDistributionInitialization(event: Initialized): void {
 
 export function handleDistributionCancelation(event: Canceled): void {
   let campaignId = event.address.toHexString()
-
   let factory = getSwaprStakingRewardsFactory()
   if (factory === null) {
     // bail if factory is null
-    return log.error('factory must be initialized when canceling a distribution', [])
+    log.error('factory must be initialized when canceling a distribution', [])
+    return
   }
   factory.initializedCampaignsCount = factory.initializedCampaignsCount - 1
   factory.save()
   // Try to fetch LMCampaign, default back to SSSCampagin
-  let canceledDistribution = LiquidityMiningCampaign.load(campaignId)
-  if (canceledDistribution) {
-    // @ts-ignore
-    canceledDistribution = SingleSidedStakingCampaign.load(campaignId) as SingleSidedStakingCampaign
+  let lmCampaign = LiquidityMiningCampaign.load(campaignId)
+  if (lmCampaign) {
+    lmCampaign.initialized = false
+    lmCampaign.save()
+    return
   }
-  if (canceledDistribution == null) {
-    return log.error('could not find distribution at {}', [campaignId])
+  let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
+  if (sssCampaign) {
+    sssCampaign.initialized = false
+    sssCampaign.save()
+    return
   }
-  canceledDistribution.initialized = false
-  canceledDistribution.save()
+
+  log.error('could not find distribution at {}', [campaignId])
 }
 
 export function handleDeposit(event: Staked): void {
