@@ -320,23 +320,32 @@ export function handleClaim(event: Claimed): void {
 }
 
 export function handleRecovery(event: Recovered): void {
-  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
-  if (campaign == null) {
-    log.error('non existent campaign {}', [event.address.toHexString()])
+  let campaignId = event.address.toHexString()
+  let lmCampaign = LiquidityMiningCampaign.load(campaignId)
+  let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
+
+  if (lmCampaign == null || sssCampaign == null) {
+    log.error('non existent campaign {}', [campaignId])
     return
+  }
+  // Determine the entity type
+  let campaignEntityName = 'LiquidityMiningCampaign'
+  if (sssCampaign) {
+    campaignEntityName = 'SingleSidedStakingCampaign'
   }
 
   // populating the recovery entity
   let recovery = new Recovery(event.transaction.hash.toHexString())
   recovery.amounts = []
-  recovery.liquidityMiningCampaign = campaign.id
+  recovery.liquidityMiningCampaign = lmCampaign.id
   recovery.timestamp = event.block.timestamp
 
-  let distributionRewards = campaign.rewards
+  let distributionRewards = lmCampaign.rewards
   let recoveredAmounts = event.params.amounts
   for (let i = 0; i < distributionRewards.length; i++) {
-    let reward = LiquidityMiningCampaignReward.load(distributionRewards[i]) as LiquidityMiningCampaignReward
-    let token = Token.load(reward.token) as Token
+    // Load the entity record from store and then get the token address to get decimal
+    let reward = store.get(campaignEntityName, distributionRewards[i])
+    let token = Token.load(reward.get('token').toString()) as Token
     recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
   }
   recovery.save()
