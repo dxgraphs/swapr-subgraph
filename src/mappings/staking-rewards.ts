@@ -11,7 +11,8 @@ import {
   Recovery,
   LiquidityMiningCampaignReward,
   SingleSidedStakingCampaign,
-  SingleSidedStakingCampaignReward
+  SingleSidedStakingCampaignReward,
+  SingleSidedStakingCampaignDeposit
 } from '../types/schema'
 import { Distribution as DistributionTemplate } from '../types/templates'
 import { DistributionCreated } from '../types/StakingRewardsFactory/StakingRewardsFactory'
@@ -29,7 +30,8 @@ import {
   ZERO_BD,
   BI_18,
   getOrCreateLiquidityMiningPosition,
-  createLiquidityMiningSnapshot
+  createLiquidityMiningSnapshot,
+  getOrCreateSingleSidedStakingCampaignPosition
 } from './helpers'
 import { getStakingRewardsFactoryAddress, isSwaprToken } from '../commons/addresses'
 import { createOrGetToken } from '../commons/token'
@@ -41,7 +43,6 @@ export function handleDistributionCreation(event: DistributionCreated): void {
   context.setString('address', event.params.deployedAt.toHexString())
   DistributionTemplate.createWithContext(event.params.deployedAt, context)
 }
-
 
 export function handleDistributionInitialization(event: Initialized): void {
   // load factory (create if first distribution)
@@ -158,32 +159,57 @@ export function handleDistributionCancelation(event: Canceled): void {
 }
 
 export function handleDeposit(event: Staked): void {
-  let campaign = LiquidityMiningCampaign.load(event.address.toHexString())
-  if (campaign == null) {
-    log.error('non existent campaign {}', [event.address.toHexString()])
-    return
+  // Fetch both entities
+  let campaignId = event.address.toHexString()
+  let lmCampaign = LiquidityMiningCampaign.load(campaignId)
+  let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
+
+  // Handle Type of LiquidityMiningCampaign
+  if (lmCampaign) {
+    let stakedAmount = convertTokenToDecimal(event.params.amount, BI_18) // lp tokens have hardcoded 18 decimals
+    lmCampaign.stakedAmount = lmCampaign.stakedAmount.plus(stakedAmount)
+    lmCampaign.save()
+    let position = getOrCreateLiquidityMiningPosition(
+      lmCampaign as LiquidityMiningCampaign,
+      Pair.load(lmCampaign.stakablePair) as Pair,
+      event.params.staker
+    )
+    position.stakedAmount = position.stakedAmount.plus(stakedAmount)
+    position.save()
+
+    createLiquidityMiningSnapshot(position, lmCampaign as LiquidityMiningCampaign, event)
+
+    // populating the stake deposit entity
+    let deposit = new Deposit(event.transaction.hash.toHexString())
+    deposit.liquidityMiningCampaign = lmCampaign.id
+    deposit.user = event.params.staker
+    deposit.timestamp = event.block.timestamp
+    deposit.amount = stakedAmount
+    return deposit.save()
   }
-  let stakedAmount = convertTokenToDecimal(event.params.amount, BI_18) // lp tokens have hardcoded 18 decimals
-  campaign.stakedAmount = campaign.stakedAmount.plus(stakedAmount)
-  campaign.save()
 
-  let position = getOrCreateLiquidityMiningPosition(
-    campaign as LiquidityMiningCampaign,
-    Pair.load(campaign.stakablePair) as Pair,
-    event.params.staker
-  )
-  position.stakedAmount = position.stakedAmount.plus(stakedAmount)
-  position.save()
+  // Handle type of SingleSidedStakingCampaign
+  if (sssCampaign) {
+    let stakedAmount = convertTokenToDecimal(event.params.amount, BI_18) // lp tokens have hardcoded 18 decimals
+    sssCampaign.stakedAmount = sssCampaign.stakedAmount.plus(stakedAmount)
+    sssCampaign.save()
+    // Link position
+    let position = getOrCreateSingleSidedStakingCampaignPosition(
+      sssCampaign as SingleSidedStakingCampaign,
+      event.params.staker
+    )
+    position.stakedAmount = position.stakedAmount.plus(stakedAmount)
+    position.save()
+    // populating the stake deposit entity
+    let deposit = new SingleSidedStakingCampaignDeposit(event.transaction.hash.toHexString())
+    deposit.singleSidedStakingCampaign = sssCampaign.id
+    deposit.user = event.params.staker
+    deposit.timestamp = event.block.timestamp
+    deposit.amount = stakedAmount
+    return deposit.save()
+  }
 
-  createLiquidityMiningSnapshot(position, campaign as LiquidityMiningCampaign, event)
-
-  // populating the stake deposit entity
-  let deposit = new Deposit(event.transaction.hash.toHexString())
-  deposit.liquidityMiningCampaign = campaign.id
-  deposit.user = event.params.staker
-  deposit.timestamp = event.block.timestamp
-  deposit.amount = stakedAmount
-  deposit.save()
+  log.error('non existent campaign {}', [campaignId])
 }
 
 export function handleWithdrawal(event: Withdrawn): void {
