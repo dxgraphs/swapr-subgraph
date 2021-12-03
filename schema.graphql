@@ -360,13 +360,6 @@ type LiquidityMiningCampaign @entity {
   recoveries: [Recovery!]! @derivedFrom(field: "liquidityMiningCampaign")
 }
 
-# Liquidity mining campaign reward
-type SingleSidedStakingCampaignReward @entity {
-  id: ID!
-  token: Token!
-  amount: BigDecimal!
-}
-
 # LP tokens staking
 type Deposit @entity {
   id: ID!
@@ -413,7 +406,6 @@ type SingleSidedStakingCampaign @entity {
   duration: BigInt!
   locked: Boolean!
   stakeToken: Token!
-  rewardToken: Token!
   rewards: [SingleSidedStakingCampaignReward]!
   stakedAmount: BigDecimal!
   stakingCap: BigDecimal!
@@ -422,6 +414,13 @@ type SingleSidedStakingCampaign @entity {
   withdrawals: [SingleSidedStakingCampaignWithdrawal!]! @derivedFrom(field: "singleSidedStakingCampaign")
   claims: [SingleSidedStakingCampaignClaim!]! @derivedFrom(field: "singleSidedStakingCampaign")
   recoveries: [SingleSidedStakingCampaignRecovery!]! @derivedFrom(field: "singleSidedStakingCampaign")
+}
+
+# Staking campaign reward
+type SingleSidedStakingCampaignReward @entity {
+  id: ID!
+  token: Token!
+  amount: BigDecimal!
 }
 
 # LP tokens staking

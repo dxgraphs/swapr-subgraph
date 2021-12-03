@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, DataSourceContext, dataSource, Bytes, Address, BigDecimal, BigInt } from '@graphprotocol/graph-ts'
+import { log, DataSourceContext, dataSource, Bytes, Address, store } from '@graphprotocol/graph-ts'
 import {
   Pair,
   Token,
@@ -56,14 +56,15 @@ export function handleDistributionInitialization(event: Initialized): void {
   factory.initializedCampaignsCount = factory.initializedCampaignsCount + 1
   factory.save()
 
+  // the contract
+  let context = dataSource.context()
+  let hexDistributionAddress = context.getString('address')
+
   // If the campaign is a Single Sided Staking campaign
   if (
     event.params.rewardsTokenAddresses.length == 1 &&
     isSwaprToken(getFirstFromAddressArray(event.params.rewardsTokenAddresses))
   ) {
-    // the contract
-    let context = dataSource.context()
-
     let sssCampaign = new SingleSidedStakingCampaign(event.address.toHexString())
     sssCampaign.initialized = true
     sssCampaign.owner = Bytes.fromHexString(context.getString('owner')) as Bytes
@@ -71,22 +72,27 @@ export function handleDistributionInitialization(event: Initialized): void {
     sssCampaign.endsAt = event.params.endingTimestamp
     sssCampaign.duration = sssCampaign.endsAt.minus(sssCampaign.startsAt)
     sssCampaign.locked = event.params.locked
-    {
-      // Linked: Stake token entity
-      let stakeToken = createOrGetToken(event.params.stakableTokenAddress)
-      sssCampaign.stakeToken = stakeToken.id.toString()
+    // Linked: Stake token entity
+    let stakeToken = createOrGetToken(event.params.stakableTokenAddress)
+    sssCampaign.stakeToken = stakeToken.id.toString()
+    // Linked: Create Single Sided Staking Campaign Reward entity
+    let rewardTokenAddresses = event.params.rewardsTokenAddresses
+    let eventRewardAmounts = event.params.rewardsAmounts
+    let rewardsIdList: string[] = []
+    for (let index = 0; index < rewardTokenAddresses.length; index++) {
+      let address: Address = rewardTokenAddresses[index]
+      let hexTokenAddress = address.toHexString()
+      let rewardToken = createOrGetToken(address)
+      let rewardId = hexDistributionAddress.concat('-').concat(hexTokenAddress)
+      let reward = LiquidityMiningCampaignReward.load(rewardId)
+      if (reward == null) reward = new SingleSidedStakingCampaignReward(rewardId)
+      reward.token = hexTokenAddress
+      reward.amount = convertTokenToDecimal(eventRewardAmounts[index], rewardToken.decimals)
+      reward.save()
+      rewardsIdList.push(reward.id)
     }
-    {
-      // Linked: Create Single Sided Staking Campaign Reward entity
-      let sssCampaignReward = new SingleSidedStakingCampaignReward(event.transaction.hash.toHexString())
-      sssCampaignReward.amount = getFirstFromBigIntArray(event.params.rewardsAmounts).toBigDecimal()
-      let rewardToken = createOrGetToken(getFirstFromAddressArray(event.params.rewardsTokenAddresses))
-      sssCampaignReward.token = rewardToken.id
-        sssCampaignReward.save()
-        // Link entries to main entity
-      sssCampaign.reward = sssCampaignReward.id
-        sssCampaign.rewardToken = rewardToken.id
-    }
+    // Link entries to main entity
+    sssCampaign.rewards = rewardsIdList
     sssCampaign.stakedAmount = ZERO_BD
     sssCampaign.stakingCap = convertTokenToDecimal(event.params.stakingCap, BI_18) // lp tokens have hardcoded 18 decimals
     // Save and exit
@@ -105,8 +111,7 @@ export function handleDistributionInitialization(event: Initialized): void {
     log.warning('could not get pair for address {}', [event.params.stakableTokenAddress.toHexString()])
     return
   }
-  let context = dataSource.context()
-  let hexDistributionAddress = context.getString('address')
+
   // distribution needs to be loaded since it's possible to cancel and then reinitialize
   // an already-existing instance
   let distribution = LiquidityMiningCampaign.load(hexDistributionAddress)
@@ -313,7 +318,7 @@ export function handleClaim(event: Claimed): void {
       let token = Token.load(reward.token) as Token
       claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
     }
-  claim.save()
+    claim.save()
     return
   }
   log.error('non existent campaign {}', [campaignId])
