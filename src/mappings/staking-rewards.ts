@@ -84,7 +84,7 @@ export function handleDistributionInitialization(event: Initialized): void {
       let hexTokenAddress = address.toHexString()
       let rewardToken = createOrGetToken(address)
       let rewardId = hexDistributionAddress.concat('-').concat(hexTokenAddress)
-      let reward = LiquidityMiningCampaignReward.load(rewardId)
+      let reward = SingleSidedStakingCampaignReward.load(rewardId)
       if (reward == null) reward = new SingleSidedStakingCampaignReward(rewardId)
       reward.token = hexTokenAddress
       reward.amount = convertTokenToDecimal(eventRewardAmounts[index], rewardToken.decimals)
@@ -267,7 +267,10 @@ export function handleWithdrawal(event: Withdrawn): void {
   if (sssCampaign) {
     let withdrawnAmount = convertTokenToDecimal(event.params.amount, BI_18)
     sssCampaign.stakedAmount = sssCampaign.stakedAmount.minus(withdrawnAmount)
-    let position = getOrCreateSingleSidedStakingCampaignPosition(sssCampaign, event.params.withdrawer)
+    let position = getOrCreateSingleSidedStakingCampaignPosition(
+      sssCampaign as SingleSidedStakingCampaign,
+      event.params.withdrawer
+    )
     position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
     // populating the withdrawal entity
     let withdrawal = new SingleSidedStakingCampaignWithdrawal(event.transaction.hash.toHexString())
