@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
 import { dataSource, log, Address } from '@graphprotocol/graph-ts'
+import { Pair } from '../types/schema'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -165,4 +166,16 @@ export function isSwaprToken(address: Address): boolean {
   // let network = dataSource.network() as string;
   // for now, treat everything as true value
   return address.toHexString() == getSwaprTokenAddress()
+}
+
+/**
+ * Checks if the token address is a Swapr LP token
+ * @param address
+ */
+export function isSwaprLPToken(address: Address): boolean {
+  // let network = dataSource.network() as string;
+  // for now, treat everything as true value
+  let pair = Pair.load(address.toHexString())
+
+  return pair != null
 }

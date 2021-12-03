@@ -35,9 +35,9 @@ import {
   getSwaprStakingRewardsFactory,
   getOrCreateSingleSidedStakingCampaignPosition
 } from './helpers'
-import { isSwaprToken } from '../commons/addresses'
+import { isSwaprLPToken } from '../commons/addresses'
 import { createOrGetToken } from '../commons/token'
-import { getFirstFromAddressArray, getFirstFromBigIntArray } from '../commons/helpers'
+import { getFirstFromAddressArray } from '../commons/helpers'
 
 export function handleDistributionCreation(event: DistributionCreated): void {
   let context = new DataSourceContext()
@@ -60,11 +60,8 @@ export function handleDistributionInitialization(event: Initialized): void {
   let context = dataSource.context()
   let hexDistributionAddress = context.getString('address')
 
-  // If the campaign is a Single Sided Staking campaign
-  if (
-    event.params.rewardsTokenAddresses.length == 1 &&
-    isSwaprToken(getFirstFromAddressArray(event.params.rewardsTokenAddresses))
-  ) {
+  // Assume that every ERC20 which is NOT a Swapr LP pair token is considered a single sided staking campaign
+  if (!isSwaprLPToken(event.params.stakableTokenAddress)) {
     let sssCampaign = new SingleSidedStakingCampaign(event.address.toHexString())
     sssCampaign.initialized = true
     sssCampaign.owner = Bytes.fromHexString(context.getString('owner')) as Bytes
@@ -281,7 +278,7 @@ export function handleWithdrawal(event: Withdrawn): void {
     // save transaction
     withdrawal.save()
     position.save()
-    lmCampaign.save()
+    sssCampaign.save()
     return
   }
 }
