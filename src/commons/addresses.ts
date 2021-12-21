@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
-import { dataSource, log } from '@graphprotocol/graph-ts'
+import { dataSource, log, Address } from '@graphprotocol/graph-ts'
+import { Pair } from '../types/schema'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -137,4 +138,44 @@ export function getUsdtNativeCurrencyWrapperPair(): string {
   if (network == 'arbitrum-rinkeby') return ADDRESS_ZERO
   log.warning('no usdt native currency wrapper pair address for unsupported network {}', [network])
   return ADDRESS_ZERO
+}
+
+/**
+ * Swapr token address, supported network: Mainnet, Arbitrum One, xDAI, Rinkeby, and Arbitrum Rinkeby
+ */
+export function getSwaprTokenAddress(): string {
+  let network = dataSource.network() as string
+  // Production
+  if (network == 'mainnet') return '0x6cacdb97e3fc8136805a9e7c342d866ab77d0957'
+  if (network == 'arbitrum-one') return '0xde903e2712288a1da82942dddf2c20529565ac30'
+  if (network == 'xdai') return '0x532801ED6f82FFfD2DAB70A19fC2d7B2772C4f4b'
+  /**
+   * @todo get the correct addreses
+   */
+  if (network == 'arbitrum-rinkeby') return '0x99583f330814E04de96C0288FBF82B5E35A009dc'
+  if (network == 'rinkeby') return '0xa271ccbc126a41f04bae8fdbdbcefcf10bf59a48'
+  log.warning('no Swapr address for unsupported network {}', [network])
+  return ADDRESS_ZERO
+}
+
+/**
+ * Checks if the token address is a Swapr token
+ * @param address
+ */
+export function isSwaprToken(address: Address): boolean {
+  // let network = dataSource.network() as string;
+  // for now, treat everything as true value
+  return address.toHexString() == getSwaprTokenAddress()
+}
+
+/**
+ * Checks if the token address is a Swapr LP token
+ * @param address
+ */
+export function isSwaprLPToken(address: Address): boolean {
+  // let network = dataSource.network() as string;
+  // for now, treat everything as true value
+  let pair = Pair.load(address.toHexString())
+
+  return pair != null
 }

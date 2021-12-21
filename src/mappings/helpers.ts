@@ -12,10 +12,13 @@ import {
   Pair,
   LiquidityMiningCampaign,
   LiquidityMiningPosition,
-  LiquidityMiningPositionSnapshot
+  LiquidityMiningPositionSnapshot,
+  SingleSidedStakingCampaign,
+  SingleSidedStakingCampaignPosition,
+  SwaprStakingRewardsFactory
 } from '../types/schema'
 import { Factory as FactoryContract } from '../types/templates/Pair/Factory'
-import { getFactoryAddress } from '../commons/addresses'
+import { getFactoryAddress, getStakingRewardsFactoryAddress } from '../commons/addresses'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -173,6 +176,14 @@ export function createLiquidityPosition(exchange: Address, user: Address): Liqui
   return liquidityTokenBalance as LiquidityPosition
 }
 
+/**
+ * Gets a Single Liquidity Mining Campaign Position for given compisite of campaign, pair, and user.
+ * Defaults to creating a new entity if not found
+ * @param campaign
+ * @param pair
+ * @param user
+ * @returns
+ */
 export function getOrCreateLiquidityMiningPosition(
   campaign: LiquidityMiningCampaign,
   pair: Pair,
@@ -189,6 +200,29 @@ export function getOrCreateLiquidityMiningPosition(
     position.save()
   }
   return position as LiquidityMiningPosition
+}
+
+/**
+ * Gets a Single Liquidity Mining Campaign Position for given compisite of campaign and user.
+ * Defaults to creating a new entity if not found
+ * @param campaign
+ * @param user
+ * @returns
+ */
+export function getOrCreateSingleSidedStakingCampaignPosition(
+  campaign: SingleSidedStakingCampaign,
+  user: Address
+): SingleSidedStakingCampaignPosition {
+  let id = campaign.id.concat('-').concat(user.toHexString())
+  let position = SingleSidedStakingCampaignPosition.load(id)
+  if (position === null) {
+    position = new SingleSidedStakingCampaignPosition(id)
+    position.singleSidedStakingCampaign = campaign.id
+    position.stakedAmount = ZERO_BD
+    position.user = user.toHexString()
+    position.save()
+  }
+  return position as SingleSidedStakingCampaignPosition
 }
 
 export function createUser(address: Address): void {
@@ -252,4 +286,20 @@ export function createLiquidityMiningSnapshot(
   snapshot.totalStakedLiquidityToken = campaign.stakedAmount
   snapshot.stakedLiquidityTokenBalance = position.stakedAmount
   snapshot.save()
+}
+
+/**
+ * Retrieves the SwaprStakingRewardsFactory, creates a one if none exists
+ */
+export function getSwaprStakingRewardsFactory(): SwaprStakingRewardsFactory {
+  // load factory (create if first distribution)
+  let stakingRewardsFactoryAddress = getStakingRewardsFactoryAddress()
+  let factory = SwaprStakingRewardsFactory.load(stakingRewardsFactoryAddress)
+  if (factory === null) {
+    factory = new SwaprStakingRewardsFactory(stakingRewardsFactoryAddress)
+    factory.initializedCampaignsCount = 0
+    factory.save()
+  }
+
+  return factory as SwaprStakingRewardsFactory
 }
