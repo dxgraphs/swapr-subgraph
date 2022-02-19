@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
 import { dataSource, log, Address } from '@graphprotocol/graph-ts'
+import { Pair as PairContract } from '../types/Factory/Pair'
 import { Pair } from '../types/schema'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
@@ -176,6 +177,16 @@ export function isSwaprLPToken(address: Address): boolean {
   // let network = dataSource.network() as string;
   // for now, treat everything as true value
   let pair = Pair.load(address.toHexString())
+  // Using the graph store
+  if (pair != null) {
+    return true
+  }
+  // From the contract
+  let pairContract = PairContract.bind(address)
+  let factoryAddress = pairContract.try_factory()
+  if (factoryAddress.value === Address.fromString('0x5d48c95adffd4b40c1aaadc4e08fc44117e02179')) {
+    return true
+  }
 
-  return pair != null
+  return false
 }

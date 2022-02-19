@@ -315,8 +315,10 @@ export function handleClaim(event: Claimed): void {
     let claimedAmounts = event.params.amounts
     for (let i = 0; i < distributionRewards.length; i++) {
       let reward = SingleSidedStakingCampaignReward.load(distributionRewards[i])
-      let token = Token.load(reward.token) as Token
-      claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
+      if (reward) {
+        let token = Token.load(reward.token) as Token
+        claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
+      }
     }
     claim.save()
     return
@@ -350,8 +352,13 @@ export function handleRecovery(event: Recovered): void {
   for (let i = 0; i < distributionRewards.length; i++) {
     // Load the entity record from store and then get the token address to get decimal
     let reward = store.get(campaignEntityName, distributionRewards[i])
-    let token = Token.load(reward.get('token').toString()) as Token
-    recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
+    if (reward) {
+      let tokenId = reward.get('token')
+      if (tokenId) {
+        let token = Token.load(tokenId.toString()) as Token
+        recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
+      }
+    }
   }
   recovery.save()
 }

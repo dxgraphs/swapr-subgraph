@@ -71,13 +71,20 @@ export function findNativeCurrencyPerToken(token: Token): BigDecimal {
   for (let i = 0; i < whitelist.length; i++) {
     let pairAddress = whitelist[i]
     let pair = Pair.load(pairAddress)
+
+    if (!pair) continue
+
     if (pair.token0 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
       let token1 = Token.load(pair.token1)
-      return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * native currency per token 1
+      if (token1) {
+        return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * native currency per token 1
+      }
     }
     if (pair.token1 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
       let token0 = Token.load(pair.token0)
-      return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * native currency per token 0
+      if (token0) {
+        return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * native currency per token 0
+      }
     }
   }
   return ZERO_BD // nothing was found return 0
@@ -97,8 +104,11 @@ export function getTrackedVolumeUSD(
   pair: Pair
 ): BigDecimal {
   let bundle = Bundle.load('1')
-  let price0 = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
-  let price1 = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+
+  if (!bundle) return BigDecimal.zero()
+
+  let price0 = (token0.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
+  let price1 = (token1.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
 
   let whitelist = getLiquidityTrackingTokenAddresses()
   // if less than 5 LPs, require high minimum reserve amount amount or return 0
@@ -157,8 +167,8 @@ export function getTrackedLiquidityUSD(
   token1: Token
 ): BigDecimal {
   let bundle = Bundle.load('1')
-  let price0 = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
-  let price1 = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+  let price0 = (token0.derivedNativeCurrency as BigDecimal).times(bundle!.nativeCurrencyPrice)
+  let price1 = (token1.derivedNativeCurrency as BigDecimal).times(bundle!.nativeCurrencyPrice)
 
   let whitelist = getLiquidityTrackingTokenAddresses()
   // both are whitelist tokens, take average of both amounts

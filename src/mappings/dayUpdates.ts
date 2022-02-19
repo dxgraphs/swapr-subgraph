@@ -7,6 +7,7 @@ import { getFactoryAddress } from '../commons/addresses'
 
 export function updateSwaprDayData(event: ethereum.Event): SwaprDayData {
   let swapr = SwaprFactory.load(getFactoryAddress())
+
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
@@ -21,9 +22,9 @@ export function updateSwaprDayData(event: ethereum.Event): SwaprDayData {
     swaprDayData.dailyVolumeUntracked = ZERO_BD
   }
 
-  swaprDayData.totalLiquidityUSD = swapr.totalLiquidityUSD
-  swaprDayData.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency
-  swaprDayData.txCount = swapr.txCount
+  swaprDayData.totalLiquidityUSD = swapr!.totalLiquidityUSD
+  swaprDayData.totalLiquidityNativeCurrency = swapr!.totalLiquidityNativeCurrency
+  swaprDayData.txCount = swapr!.txCount
   swaprDayData.save()
 
   return swaprDayData as SwaprDayData
@@ -42,8 +43,8 @@ export function updatePairDayData(event: ethereum.Event): PairDayData {
   if (pairDayData === null) {
     pairDayData = new PairDayData(dayPairID)
     pairDayData.date = dayStartTimestamp
-    pairDayData.token0 = pair.token0
-    pairDayData.token1 = pair.token1
+    pairDayData.token0 = pair!.token0
+    pairDayData.token1 = pair!.token1
     pairDayData.pairAddress = event.address
     pairDayData.dailyVolumeToken0 = ZERO_BD
     pairDayData.dailyVolumeToken1 = ZERO_BD
@@ -51,10 +52,10 @@ export function updatePairDayData(event: ethereum.Event): PairDayData {
     pairDayData.dailyTxns = ZERO_BI
   }
 
-  pairDayData.totalSupply = pair.totalSupply
-  pairDayData.reserve0 = pair.reserve0
-  pairDayData.reserve1 = pair.reserve1
-  pairDayData.reserveUSD = pair.reserveUSD
+  pairDayData.totalSupply = pair!.totalSupply
+  pairDayData.reserve0 = pair!.reserve0
+  pairDayData.reserve1 = pair!.reserve1
+  pairDayData.reserveUSD = pair!.reserveUSD
   pairDayData.dailyTxns = pairDayData.dailyTxns.plus(ONE_BI)
   pairDayData.save()
 
@@ -81,9 +82,11 @@ export function updatePairHourData(event: ethereum.Event): PairHourData {
     pairHourData.hourlyTxns = ZERO_BI
   }
 
-  pairHourData.reserve0 = pair.reserve0
-  pairHourData.reserve1 = pair.reserve1
-  pairHourData.reserveUSD = pair.reserveUSD
+  if (pair) {
+    pairHourData.reserve0 = pair.reserve0
+    pairHourData.reserve1 = pair.reserve1
+    pairHourData.reserveUSD = pair.reserveUSD
+  }
   pairHourData.hourlyTxns = pairHourData.hourlyTxns.plus(ONE_BI)
   pairHourData.save()
 
@@ -105,17 +108,19 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
     tokenDayData = new TokenDayData(tokenDayID)
     tokenDayData.date = dayStartTimestamp
     tokenDayData.token = token.id
-    tokenDayData.priceUSD = token.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+    tokenDayData.priceUSD = (token.derivedNativeCurrency as BigDecimal).times(bundle!.nativeCurrencyPrice)
     tokenDayData.dailyVolumeToken = ZERO_BD
     tokenDayData.dailyVolumeNativeCurrency = ZERO_BD
     tokenDayData.dailyVolumeUSD = ZERO_BD
     tokenDayData.dailyTxns = ZERO_BI
     tokenDayData.totalLiquidityUSD = ZERO_BD
   }
-  tokenDayData.priceUSD = token.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+  tokenDayData.priceUSD = (token.derivedNativeCurrency as BigDecimal).times(bundle!.nativeCurrencyPrice)
   tokenDayData.totalLiquidityToken = token.totalLiquidity
   tokenDayData.totalLiquidityNativeCurrency = token.totalLiquidity.times(token.derivedNativeCurrency as BigDecimal)
-  tokenDayData.totalLiquidityUSD = tokenDayData.totalLiquidityNativeCurrency.times(bundle.nativeCurrencyPrice)
+  tokenDayData.totalLiquidityUSD = (tokenDayData.totalLiquidityNativeCurrency as BigDecimal).times(
+    bundle!.nativeCurrencyPrice
+  )
   tokenDayData.dailyTxns = tokenDayData.dailyTxns.plus(ONE_BI)
   tokenDayData.save()
 

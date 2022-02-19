@@ -43,7 +43,7 @@ export function bigDecimalExp18(): BigDecimal {
 }
 
 export function convertNativeCurrencyToDecimal(eth: BigInt): BigDecimal {
-  return eth.toBigDecimal().div(exponentToBigDecimal(18))
+  return eth.toBigDecimal().div(exponentToBigDecimal(new BigInt(18)))
 }
 
 export function convertTokenToDecimal(tokenAmount: BigInt, exchangeDecimals: BigInt): BigDecimal {
@@ -132,12 +132,11 @@ export function fetchTokenName(tokenAddress: Address): string {
 
 export function fetchTokenTotalSupply(tokenAddress: Address): BigInt {
   let contract = ERC20.bind(tokenAddress)
-  let totalSupplyValue = null
   let totalSupplyResult = contract.try_totalSupply()
   if (!totalSupplyResult.reverted) {
-    totalSupplyValue = totalSupplyResult as i32
+    return totalSupplyResult.value
   }
-  return BigInt.fromI32(totalSupplyValue as i32)
+  return BigInt.fromI32(0)
 }
 
 export function fetchTokenDecimals(tokenAddress: Address): BigInt {
@@ -148,12 +147,11 @@ export function fetchTokenDecimals(tokenAddress: Address): BigInt {
 
   let contract = ERC20.bind(tokenAddress)
   // try types uint8 for decimals
-  let decimalValue = null
   let decimalResult = contract.try_decimals()
   if (!decimalResult.reverted) {
-    decimalValue = decimalResult.value
+    return BigInt.fromI32(decimalResult.value)
   }
-  return BigInt.fromI32(decimalValue as i32)
+  return BigInt.fromI32(0)
 }
 
 export function createLiquidityPosition(exchange: Address, user: Address): LiquidityPosition {
@@ -164,13 +162,15 @@ export function createLiquidityPosition(exchange: Address, user: Address): Liqui
   let liquidityTokenBalance = LiquidityPosition.load(id)
   if (liquidityTokenBalance === null) {
     let pair = Pair.load(exchange.toHexString())
-    pair.liquidityProviderCount = pair.liquidityProviderCount.plus(ONE_BI)
-    liquidityTokenBalance = new LiquidityPosition(id)
-    liquidityTokenBalance.liquidityTokenBalance = ZERO_BD
-    liquidityTokenBalance.pair = exchange.toHexString()
-    liquidityTokenBalance.user = user.toHexString()
-    liquidityTokenBalance.save()
-    pair.save()
+    if (pair) {
+      pair.liquidityProviderCount = pair.liquidityProviderCount.plus(ONE_BI)
+      liquidityTokenBalance = new LiquidityPosition(id)
+      liquidityTokenBalance.liquidityTokenBalance = ZERO_BD
+      liquidityTokenBalance.pair = exchange.toHexString()
+      liquidityTokenBalance.user = user.toHexString()
+      liquidityTokenBalance.save()
+      pair.save()
+    }
   }
   if (liquidityTokenBalance === null) log.error('LiquidityTokenBalance is null', [id])
   return liquidityTokenBalance as LiquidityPosition
@@ -238,8 +238,13 @@ export function createLiquiditySnapshot(position: LiquidityPosition, event: ethe
   let timestamp = event.block.timestamp.toI32()
   let bundle = Bundle.load('1')
   let pair = Pair.load(position.pair)
+
+  if (!bundle || !pair) return
+
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
+
+  if (!token0 || !token1) return
 
   // create new snapshot
   let snapshot = new LiquidityPositionSnapshot(position.id.concat(timestamp.toString()))
@@ -248,8 +253,8 @@ export function createLiquiditySnapshot(position: LiquidityPosition, event: ethe
   snapshot.block = event.block.number.toI32()
   snapshot.user = position.user
   snapshot.pair = position.pair
-  snapshot.token0PriceUSD = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
-  snapshot.token1PriceUSD = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+  snapshot.token0PriceUSD = (token0.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
+  snapshot.token1PriceUSD = (token1.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
   snapshot.reserve0 = pair.reserve0
   snapshot.reserve1 = pair.reserve1
   snapshot.reserveUSD = pair.reserveUSD
@@ -267,8 +272,17 @@ export function createLiquidityMiningSnapshot(
   let timestamp = event.block.timestamp.toI32()
   let bundle = Bundle.load('1')
   let pair = Pair.load(position.targetedPair)
+
+  if (!pair || !bundle) {
+    return
+  }
+
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
+
+  if (!token0 || !token1) {
+    return
+  }
 
   // create new snapshot
   let snapshot = new LiquidityMiningPositionSnapshot(position.id.concat(timestamp.toString()))
@@ -278,8 +292,12 @@ export function createLiquidityMiningSnapshot(
   snapshot.block = event.block.number.toI32()
   snapshot.user = position.user
   snapshot.pair = position.targetedPair
-  snapshot.token0PriceUSD = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
-  snapshot.token1PriceUSD = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
+
+  if (bundle.nativeCurrencyPrice && token0.derivedNativeCurrency && token1.derivedNativeCurrency) {
+    snapshot.token0PriceUSD = (token0.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
+    snapshot.token1PriceUSD = (token1.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
+  }
+
   snapshot.reserve0 = pair.reserve0
   snapshot.reserve1 = pair.reserve1
   snapshot.reserveUSD = pair.reserveUSD

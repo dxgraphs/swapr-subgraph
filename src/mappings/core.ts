@@ -31,7 +31,12 @@ import {
 import { getFactoryAddress } from '../commons/addresses'
 
 function isCompleteMint(mintId: string): boolean {
-  return MintEvent.load(mintId).sender !== null // sufficient checks
+  let mintEvent = MintEvent.load(mintId)
+  if (mintEvent) {
+    return mintEvent.sender !== null // sufficient checks
+  }
+
+  return false
 }
 
 export function handleTransfer(event: Transfer): void {
@@ -51,6 +56,10 @@ export function handleTransfer(event: Transfer): void {
 
   // get pair and load contract
   let pair = Pair.load(event.address.toHexString())
+
+  if (!pair || !factory) {
+    return
+  }
 
   // liquidity token amount being transfered
   let value = convertTokenToDecimal(event.params.value, BI_18)
@@ -134,7 +143,7 @@ export function handleTransfer(event: Transfer): void {
     let burn: BurnEvent
     if (burns.length > 0) {
       let currentBurn = BurnEvent.load(burns[burns.length - 1])
-      if (currentBurn.needsComplete) {
+      if (currentBurn && currentBurn.needsComplete) {
         burn = currentBurn as BurnEvent
       } else {
         burn = new BurnEvent(
@@ -168,17 +177,19 @@ export function handleTransfer(event: Transfer): void {
     // if this logical burn included a fee mint, account for this
     if (mints.length !== 0 && !isCompleteMint(mints[mints.length - 1])) {
       let mint = MintEvent.load(mints[mints.length - 1])
-      burn.feeTo = mint.to
-      burn.feeLiquidity = mint.liquidity
-      // remove the logical mint
-      store.remove('Mint', mints[mints.length - 1])
-      // update the transaction
+      if (mint) {
+        burn.feeTo = mint.to
+        burn.feeLiquidity = mint.liquidity
+        // remove the logical mint
+        store.remove('Mint', mints[mints.length - 1])
+        // update the transaction
 
-      // TODO: Consider using .slice().pop() to protect against unintended
-      // side effects for other code paths.
-      mints.pop()
-      transaction.mints = mints
-      transaction.save()
+        // TODO: Consider using .slice().pop() to protect against unintended
+        // side effects for other code paths.
+        mints.pop()
+        transaction.mints = mints
+        transaction.save()
+      }
     }
     burn.save()
     // if accessing last one, replace it
@@ -216,9 +227,14 @@ export function handleTransfer(event: Transfer): void {
 
 export function handleSync(event: Sync): void {
   let pair = Pair.load(event.address.toHex())
+
+  if (!pair) return
+
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
   let swapr = SwaprFactory.load(getFactoryAddress())
+
+  if (!swapr || !token0 || !token1) return
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
   swapr.totalLiquidityNativeCurrency = swapr.totalLiquidityNativeCurrency.minus(
@@ -241,6 +257,9 @@ export function handleSync(event: Sync): void {
 
   // update native currency price now that reserves could have changed
   let bundle = Bundle.load('1')
+
+  if (!bundle) return
+
   bundle.nativeCurrencyPrice = getNativeCurrencyPriceInUSD()
   bundle.save()
 
@@ -302,8 +321,12 @@ export function handleMint(event: Mint): void {
   let pair = Pair.load(event.address.toHex())
   let swapr = SwaprFactory.load(getFactoryAddress())
 
+  if (!pair || !mint || !swapr) return
+
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
+
+  if (!token0 || !token1) return
 
   // update exchange info (except balances, sync will cover that)
   let token0Amount = convertTokenToDecimal(event.params.amount0, token0.decimals)
@@ -315,10 +338,10 @@ export function handleMint(event: Mint): void {
 
   // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
-  let amountTotalUSD = token1.derivedNativeCurrency
+  let amountTotalUSD = (token1.derivedNativeCurrency as BigDecimal)
     .times(token1Amount)
-    .plus(token0.derivedNativeCurrency.times(token0Amount))
-    .times(bundle.nativeCurrencyPrice)
+    .plus((token0.derivedNativeCurrency as BigDecimal).times(token0Amount))
+    .times(bundle!.nativeCurrencyPrice as BigDecimal)
 
   // update txn counts
   pair.txCount = pair.txCount.plus(ONE_BI)
@@ -353,19 +376,24 @@ export function handleBurn(event: Burn): void {
   let transaction = Transaction.load(event.transaction.hash.toHexString())
 
   // safety check
-  if (transaction === null) {
-    return
-  }
+  if (!transaction) return
 
   let burns = transaction.burns
   let burn = BurnEvent.load(burns[burns.length - 1])
 
+  if (!burn) return
+
   let pair = Pair.load(event.address.toHex())
   let swapr = SwaprFactory.load(getFactoryAddress())
+
+  if (!pair || !swapr) return
 
   //update token info
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
+
+  if (!token0 || !token1) return
+
   let token0Amount = convertTokenToDecimal(event.params.amount0, token0.decimals)
   let token1Amount = convertTokenToDecimal(event.params.amount1, token1.decimals)
 
@@ -375,9 +403,12 @@ export function handleBurn(event: Burn): void {
 
   // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
-  let amountTotalUSD = token1.derivedNativeCurrency
+
+  if (!bundle) return
+
+  let amountTotalUSD = (token1.derivedNativeCurrency as BigDecimal)
     .times(token1Amount)
-    .plus(token0.derivedNativeCurrency.times(token0Amount))
+    .plus((token0.derivedNativeCurrency as BigDecimal).times(token0Amount))
     .times(bundle.nativeCurrencyPrice)
 
   // update txn counts
@@ -413,8 +444,14 @@ export function handleBurn(event: Burn): void {
 
 export function handleSwap(event: Swap): void {
   let pair = Pair.load(event.address.toHexString())
+
+  if (!pair) return
+
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
+
+  if (!token0 || !token1) return
+
   let amount0In = convertTokenToDecimal(event.params.amount0In, token0.decimals)
   let amount1In = convertTokenToDecimal(event.params.amount1In, token1.decimals)
   let amount0Out = convertTokenToDecimal(event.params.amount0Out, token0.decimals)
@@ -427,12 +464,14 @@ export function handleSwap(event: Swap): void {
   // native currency/USD prices
   let bundle = Bundle.load('1')
 
+  if (!bundle) return
+
   // get total amounts of derived USD and native currency for tracking
-  let derivedAmountNativeCurrency = token1.derivedNativeCurrency
+  let derivedAmountNativeCurrency = (token1.derivedNativeCurrency as BigDecimal)
     .times(amount1Total)
-    .plus(token0.derivedNativeCurrency.times(amount0Total))
+    .plus((token0.derivedNativeCurrency as BigDecimal).times(amount0Total))
     .div(BigDecimal.fromString('2'))
-  let derivedAmountUSD = derivedAmountNativeCurrency.times(bundle.nativeCurrencyPrice)
+  let derivedAmountUSD = (derivedAmountNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
 
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(amount0Total, token0 as Token, amount1Total, token1 as Token, pair as Pair)
@@ -468,6 +507,9 @@ export function handleSwap(event: Swap): void {
 
   // update global values, only used tracked amounts for volume
   let swapr = SwaprFactory.load(getFactoryAddress())
+
+  if (!swapr) return
+
   swapr.totalVolumeUSD = swapr.totalVolumeUSD.plus(trackedAmountUSD)
   swapr.totalVolumeNativeCurrency = swapr.totalVolumeNativeCurrency.plus(trackedAmountNativeCurrency)
   swapr.untrackedVolumeUSD = swapr.untrackedVolumeUSD.plus(derivedAmountUSD)
