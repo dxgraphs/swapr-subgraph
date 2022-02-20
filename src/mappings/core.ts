@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { BigInt, BigDecimal, store, Address } from '@graphprotocol/graph-ts'
+import { BigInt, BigDecimal, store, Address, Value } from '@graphprotocol/graph-ts'
 import {
   Pair,
   Token,
@@ -338,10 +338,13 @@ export function handleMint(event: Mint): void {
 
   // get new amounts of USD and native currency for tracking
   let bundle = Bundle.load('1')
+
+  if (!bundle) return
+
   let amountTotalUSD = (token1.derivedNativeCurrency as BigDecimal)
     .times(token1Amount)
     .plus((token0.derivedNativeCurrency as BigDecimal).times(token0Amount))
-    .times(bundle!.nativeCurrencyPrice as BigDecimal)
+    .times(bundle.nativeCurrencyPrice as BigDecimal)
 
   // update txn counts
   pair.txCount = pair.txCount.plus(ONE_BI)
@@ -361,7 +364,7 @@ export function handleMint(event: Mint): void {
   mint.save()
 
   // update the LP position
-  let liquidityPosition = createLiquidityPosition(event.address, mint.to as Address)
+  let liquidityPosition = createLiquidityPosition(event.address, Value.fromBytes(mint.to).toAddress())
   createLiquiditySnapshot(liquidityPosition, event)
 
   // update day entities
@@ -431,7 +434,7 @@ export function handleBurn(event: Burn): void {
   burn.save()
 
   // update the LP position
-  let liquidityPosition = createLiquidityPosition(event.address, burn.sender as Address)
+  let liquidityPosition = createLiquidityPosition(event.address, Value.fromBytes(burn.sender!).toAddress())
   createLiquiditySnapshot(liquidityPosition, event)
 
   // update day entities
