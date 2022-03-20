@@ -158,14 +158,12 @@ export function handleDistributionCancelation(event: Canceled): void {
   // Try to fetch LMCampaign, default back to SSSCampagin
   let lmCampaign = LiquidityMiningCampaign.load(campaignId)
   if (lmCampaign) {
-    lmCampaign.initialized = false
-    lmCampaign.save()
+    store.remove("LiquidityMiningCampaign", campaignId)
     return
   }
   let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
   if (sssCampaign) {
-    sssCampaign.initialized = false
-    sssCampaign.save()
+    store.remove("SingleSidedStakingCampaign", campaignId)
     return
   }
 
