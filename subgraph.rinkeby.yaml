@@ -119,7 +119,7 @@ templates:
         - event: Initialized(address[],address,uint256[],uint64,uint64,bool,uint256)
           handler: handleDistributionInitialization
         - event: Canceled()
-          handler: handleCancelation
+          handler: handleDistributionCancelation
         - event: Staked(indexed address,uint256)
           handler: handleDeposit
         - event: Withdrawn(indexed address,uint256)
