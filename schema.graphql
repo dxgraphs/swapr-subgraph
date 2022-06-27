@@ -354,14 +354,14 @@ type LiquidityMiningCampaign @entity {
   stakingCap: BigDecimal!
   liquidityMiningPositions: [LiquidityMiningPosition!]! @derivedFrom(field: "liquidityMiningCampaign")
   liquidityMiningPositionSnapshots: [LiquidityMiningPositionSnapshot!]! @derivedFrom(field: "liquidityMiningCampaign")
-  deposits: [Deposit!]! @derivedFrom(field: "liquidityMiningCampaign")
-  withdrawals: [Withdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
-  claims: [Claim!]! @derivedFrom(field: "liquidityMiningCampaign")
-  recoveries: [Recovery!]! @derivedFrom(field: "liquidityMiningCampaign")
+  deposits: [LiquidityMiningCampaignDeposit!]! @derivedFrom(field: "liquidityMiningCampaign")
+  withdrawals: [LiquidityMiningCampaignWithdrawal!]! @derivedFrom(field: "liquidityMiningCampaign")
+  claims: [LiquidityMiningCampaignClaim!]! @derivedFrom(field: "liquidityMiningCampaign")
+  recoveries: [LiquidityMiningCampaignRecovery!]! @derivedFrom(field: "liquidityMiningCampaign")
 }
 
 # LP tokens staking
-type Deposit @entity {
+type LiquidityMiningCampaignDeposit @entity {
   id: ID!
   user: Bytes!
   timestamp: BigInt!
@@ -370,7 +370,7 @@ type Deposit @entity {
 }
 
 # LP tokens withdrawing
-type Withdrawal @entity {
+type LiquidityMiningCampaignWithdrawal @entity {
   id: ID!
   user: Bytes!
   timestamp: BigInt!
@@ -379,7 +379,7 @@ type Withdrawal @entity {
 }
 
 # Reward tokens claiming
-type Claim @entity {
+type LiquidityMiningCampaignClaim @entity {
   id: ID!
   user: Bytes!
   timestamp: BigInt!
@@ -388,7 +388,7 @@ type Claim @entity {
 }
 
 # Reward tokens recovery from distribution owner
-type Recovery @entity {
+type LiquidityMiningCampaignRecovery @entity {
   id: ID!
   timestamp: BigInt!
   liquidityMiningCampaign: LiquidityMiningCampaign!
