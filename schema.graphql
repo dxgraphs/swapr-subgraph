@@ -252,6 +252,10 @@ type SwaprDayData @entity {
   dailyVolumeUSD: BigDecimal!
   dailyVolumeUntracked: BigDecimal!
 
+  dailySwaps: BigInt!
+  dailyMints: BigInt!
+  dailyBurns: BigInt!
+
   totalVolumeNativeCurrency: BigDecimal!
   totalLiquidityNativeCurrency: BigDecimal!
   totalVolumeUSD: BigDecimal! # Accumulate at each trade, not just calculated off whatever totalVolume is. making it more accurate as it is a live conversion
