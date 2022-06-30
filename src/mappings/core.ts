@@ -344,7 +344,11 @@ export function handleMint(event: Mint): void {
   // update day entities
   updatePairDayData(event)
   updatePairHourData(event)
-  updateSwaprDayData(event)
+
+  let swaprDayData = updateSwaprDayData(event)
+  swaprDayData.dailyMints = swaprDayData.dailyMints.plus(ONE_BI)
+  swaprDayData.save()
+
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
 }
@@ -406,7 +410,11 @@ export function handleBurn(event: Burn): void {
   // update day entities
   updatePairDayData(event)
   updatePairHourData(event)
-  updateSwaprDayData(event)
+
+  let swaprDayData = updateSwaprDayData(event)
+  swaprDayData.dailyBurns = swaprDayData.dailyBurns.plus(ONE_BI)
+  swaprDayData.save()
+
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
 }
@@ -532,6 +540,9 @@ export function handleSwap(event: Swap): void {
   swaprDayData.dailyVolumeUSD = swaprDayData.dailyVolumeUSD.plus(trackedAmountUSD)
   swaprDayData.dailyVolumeNativeCurrency = swaprDayData.dailyVolumeNativeCurrency.plus(trackedAmountNativeCurrency)
   swaprDayData.dailyVolumeUntracked = swaprDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
+
+  // collect to daily swaps
+  swaprDayData.dailySwaps = swaprDayData.dailySwaps.plus(ONE_BI)
   swaprDayData.save()
 
   // swap specific updating for pair

@@ -19,6 +19,9 @@ export function updateSwaprDayData(event: ethereum.Event): SwaprDayData {
     swaprDayData.totalVolumeUSD = ZERO_BD
     swaprDayData.totalVolumeNativeCurrency = ZERO_BD
     swaprDayData.dailyVolumeUntracked = ZERO_BD
+    swaprDayData.dailySwaps = ZERO_BI
+    swaprDayData.dailyMints = ZERO_BI
+    swaprDayData.dailyBurns = ZERO_BI
   }
 
   swaprDayData.totalLiquidityUSD = swapr.totalLiquidityUSD
