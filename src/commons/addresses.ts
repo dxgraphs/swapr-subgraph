@@ -79,7 +79,8 @@ export function getLiquidityTrackingTokenAddresses(): string[] {
     return [
       '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d', // WXDAI
       '0xb90d6bec20993be5d72a5ab353343f7a0281f158', // DXD
-      '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1' // WETH
+      '0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1', // WETH
+      '0x9c58bacc331c9aa871afd802db6379a98e80cedb' // GNO
     ]
   }
   if (network == 'arbitrum-one') {
