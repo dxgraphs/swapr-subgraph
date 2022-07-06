@@ -1,4 +1,4 @@
-import { PairHourData } from './../types/schema'
+import { DailyUniqueInteraction, PairHourData } from './../types/schema'
 /* eslint-disable prefer-const */
 import { BigInt, BigDecimal, ethereum } from '@graphprotocol/graph-ts'
 import { Pair, Bundle, Token, SwaprFactory, SwaprDayData, PairDayData, TokenDayData } from '../types/schema'
@@ -129,4 +129,25 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
   // updateStoredPairs(tokenDayData as TokenDayData, dayPairID)
 
   return tokenDayData as TokenDayData
+}
+
+export function updateUniqueDailyInteractions(event: ethereum.Event): DailyUniqueInteraction {
+  let timestamp = event.block.timestamp.toI32()
+  let dayID = timestamp / 86400
+  let dayStartTimestamp = dayID * 86400
+  let uniqueDailyInteractionsData = DailyUniqueInteraction.load(dayID.toString())
+
+  if (uniqueDailyInteractionsData === null) {
+    uniqueDailyInteractionsData = new DailyUniqueInteraction(dayID.toString())
+    uniqueDailyInteractionsData.date = dayStartTimestamp
+
+    uniqueDailyInteractionsData.addresses = []
+    uniqueDailyInteractionsData.mints = ZERO_BI
+    uniqueDailyInteractionsData.burns = ZERO_BI
+    uniqueDailyInteractionsData.swaps = ZERO_BI
+  }
+
+  uniqueDailyInteractionsData.save()
+
+  return uniqueDailyInteractionsData as DailyUniqueInteraction
 }
