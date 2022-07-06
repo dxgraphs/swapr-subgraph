@@ -44,7 +44,7 @@ type Token @entity {
   totalLiquidity: BigDecimal!
 
   # derived prices
-  derivedNativeCurrency: BigDecimal
+  derivedNativeCurrency: BigDecimal!
 
   whitelistPairs: [Pair!]!
 
@@ -160,9 +160,10 @@ type Transaction @entity {
   timestamp: BigInt!
   # This is not the reverse of Mint.transaction; it is only used to
   # track incomplete mints (similar for burns and swaps)
-  mints: [Mint]!
-  burns: [Burn]!
-  swaps: [Swap]!
+  mints: [Mint!]!
+  burns: [Burn!]!
+  swaps: [Swap!]!
+}
 }
 
 type Mint @entity {
@@ -410,7 +411,7 @@ type SingleSidedStakingCampaign @entity {
   duration: BigInt!
   locked: Boolean!
   stakeToken: Token!
-  rewards: [SingleSidedStakingCampaignReward]!
+  rewards: [SingleSidedStakingCampaignReward!]!
   stakedAmount: BigDecimal!
   stakingCap: BigDecimal!
   singleSidedStakingPositions: [SingleSidedStakingCampaignPosition!]! @derivedFrom(field: "singleSidedStakingCampaign")
