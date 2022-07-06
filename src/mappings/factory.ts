@@ -9,11 +9,15 @@ import {
   fetchTokenSymbol,
   fetchTokenName,
   fetchTokenDecimals,
-  fetchTokenTotalSupply
+  fetchTokenTotalSupply,
 } from './helpers'
 import { getFactoryAddress, getLiquidityTrackingTokenAddresses } from '../commons/addresses'
 
-export function handleNewPair(event: PairCreated): void {
+/**
+ * Returns the SwaprFactory entity. Creates a new entity if it doesn't exist.
+ * @returns {SwaprFactory} the SwaprFactory entity
+ */
+export function getSwaprFactory(): SwaprFactory {
   // load factory (create if first exchange)
   let factoryAddress = getFactoryAddress()
   let factory = SwaprFactory.load(factoryAddress)
@@ -32,6 +36,14 @@ export function handleNewPair(event: PairCreated): void {
     bundle.nativeCurrencyPrice = ZERO_BD
     bundle.save()
   }
+
+  factory.save()
+
+  return factory
+}
+
+export function handleNewPair(event: PairCreated): void {
+  let factory = getSwaprFactory()
   factory.pairCount = factory.pairCount + 1
   factory.save()
 
