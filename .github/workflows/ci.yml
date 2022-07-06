@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        check-latest: true
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile --cache-folder $(yarn cache dir)
+    - name: Codegen
+      run: yarn codegen:mainnet
+    - name: Build
+      run: yarn build:mainnet
