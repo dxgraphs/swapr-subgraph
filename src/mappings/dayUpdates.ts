@@ -1,12 +1,12 @@
 import { DailyUniqueInteraction, PairHourData } from './../types/schema'
 /* eslint-disable prefer-const */
 import { BigInt, BigDecimal, ethereum } from '@graphprotocol/graph-ts'
-import { Pair, Bundle, Token, SwaprFactory, SwaprDayData, PairDayData, TokenDayData } from '../types/schema'
+import { Pair, Token, SwaprDayData, PairDayData, TokenDayData } from '../types/schema'
 import { ONE_BI, ZERO_BD, ZERO_BI } from './helpers'
-import { getFactoryAddress } from '../commons/addresses'
+import { getBundle, getSwaprFactory } from './factory'
 
 export function updateSwaprDayData(event: ethereum.Event): SwaprDayData {
-  let swapr = SwaprFactory.load(getFactoryAddress())
+  let swapr = getSwaprFactory()
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
@@ -36,11 +36,13 @@ export function updatePairDayData(event: ethereum.Event): PairDayData {
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
-  let dayPairID = event.address
-    .toHexString()
-    .concat('-')
-    .concat(BigInt.fromI32(dayID).toString())
+  let dayPairID = event.address.toHexString().concat('-').concat(BigInt.fromI32(dayID).toString())
   let pair = Pair.load(event.address.toHexString())
+
+  if (!pair) {
+    throw new Error('Pair not found')
+  }
+
   let pairDayData = PairDayData.load(dayPairID)
   if (pairDayData === null) {
     pairDayData = new PairDayData(dayPairID)
@@ -68,11 +70,13 @@ export function updatePairHourData(event: ethereum.Event): PairHourData {
   let timestamp = event.block.timestamp.toI32()
   let hourIndex = timestamp / 3600 // get unique hour within unix history
   let hourStartUnix = hourIndex * 3600 // want the rounded effect
-  let hourPairID = event.address
-    .toHexString()
-    .concat('-')
-    .concat(BigInt.fromI32(hourIndex).toString())
+  let hourPairID = event.address.toHexString().concat('-').concat(BigInt.fromI32(hourIndex).toString())
   let pair = Pair.load(event.address.toHexString())
+
+  if (!pair) {
+    throw new Error('Pair not found')
+  }
+
   let pairHourData = PairHourData.load(hourPairID)
   if (pairHourData === null) {
     pairHourData = new PairHourData(hourPairID)
@@ -94,14 +98,11 @@ export function updatePairHourData(event: ethereum.Event): PairHourData {
 }
 
 export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDayData {
-  let bundle = Bundle.load('1')
+  let bundle = getBundle()
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
-  let tokenDayID = token.id
-    .toString()
-    .concat('-')
-    .concat(BigInt.fromI32(dayID).toString())
+  let tokenDayID = token.id.toString().concat('-').concat(BigInt.fromI32(dayID).toString())
 
   let tokenDayData = TokenDayData.load(tokenDayID)
   if (tokenDayData === null) {
