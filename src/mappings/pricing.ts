@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { Pair, Token, Bundle } from '../types/schema'
+import { Pair, Token } from '../types/schema'
 import { BigDecimal, BigInt, dataSource } from '@graphprotocol/graph-ts/index'
 import { ZERO_BD, ONE_BD } from './helpers'
 import {
@@ -7,9 +7,10 @@ import {
   getUsdcNativeCurrencyWrapperPairAddress,
   getUsdtNativeCurrencyWrapperPair,
   getNativeCurrencyWrapperAddress,
-  getLiquidityTrackingTokenAddresses
+  getLiquidityTrackingTokenAddresses,
 } from '../commons/addresses'
 import { getMinimumLiquidityThresholdNativeCurrency, getMinimumUsdThresholdForNewPairs } from '../commons/pricing'
+import { getBundle } from './factory'
 
 export function getNativeCurrencyPriceInUSD(): BigDecimal {
   if (dataSource.network() == 'xdai') {
@@ -34,10 +35,7 @@ export function getNativeCurrencyPriceInUSD(): BigDecimal {
     let usdcPairPrice = usdcPair.token0 == nativeCurrencyWrapperAddress ? usdcPair.token1Price : usdcPair.token0Price
     let usdtPairPrice = usdtPair.token0 == nativeCurrencyWrapperAddress ? usdtPair.token1Price : usdtPair.token0Price
 
-    return daiPairPrice
-      .times(daiWeight)
-      .plus(usdcPairPrice.times(usdcWeight))
-      .plus(usdtPairPrice.times(usdtWeight))
+    return daiPairPrice.times(daiWeight).plus(usdcPairPrice.times(usdcWeight)).plus(usdtPairPrice.times(usdtWeight))
     // dai and USDC have been created
   } else if (daiPair !== null && usdcPair !== null) {
     let totalLiquidityNativeCurrency = daiPair.reserve1.plus(usdcPair.reserve1)
@@ -71,12 +69,15 @@ export function findNativeCurrencyPerToken(token: Token): BigDecimal {
   for (let i = 0; i < whitelist.length; i++) {
     let pairAddress = whitelist[i]
     let pair = Pair.load(pairAddress)
+    if (!pair) {
+      continue
+    }
     if (pair.token0 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
-      let token1 = Token.load(pair.token1)
+      let token1 = Token.load(pair.token1) as Token
       return pair.token1Price.times(token1.derivedNativeCurrency as BigDecimal) // return token1 per our token * native currency per token 1
     }
     if (pair.token1 == token.id && pair.reserveNativeCurrency.gt(getMinimumLiquidityThresholdNativeCurrency())) {
-      let token0 = Token.load(pair.token0)
+      let token0 = Token.load(pair.token0) as Token
       return pair.token0Price.times(token0.derivedNativeCurrency as BigDecimal) // return token0 per our token * native currency per token 0
     }
   }
@@ -96,7 +97,7 @@ export function getTrackedVolumeUSD(
   token1: Token,
   pair: Pair
 ): BigDecimal {
-  let bundle = Bundle.load('1')
+  let bundle = getBundle()
   let price0 = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
   let price1 = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
 
@@ -124,10 +125,7 @@ export function getTrackedVolumeUSD(
 
   // both are whitelist tokens, take average of both amounts
   if (whitelist.includes(token0.id) && whitelist.includes(token1.id)) {
-    return tokenAmount0
-      .times(price0)
-      .plus(tokenAmount1.times(price1))
-      .div(BigDecimal.fromString('2'))
+    return tokenAmount0.times(price0).plus(tokenAmount1.times(price1)).div(BigDecimal.fromString('2'))
   }
 
   // take full value of the whitelisted token amount
@@ -156,7 +154,7 @@ export function getTrackedLiquidityUSD(
   tokenAmount1: BigDecimal,
   token1: Token
 ): BigDecimal {
-  let bundle = Bundle.load('1')
+  let bundle = getBundle()
   let price0 = token0.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
   let price1 = token1.derivedNativeCurrency.times(bundle.nativeCurrencyPrice)
 
