@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, DataSourceContext, dataSource, Bytes, Address, store } from '@graphprotocol/graph-ts'
+import { log, DataSourceContext, dataSource, Bytes, Address, store, Value } from '@graphprotocol/graph-ts'
 import {
   Pair,
   Token,
@@ -13,7 +13,7 @@ import {
   SingleSidedStakingCampaignReward,
   SingleSidedStakingCampaignDeposit,
   SingleSidedStakingCampaignWithdrawal,
-  SingleSidedStakingCampaignClaim
+  SingleSidedStakingCampaignClaim,
 } from '../types/schema'
 import { Distribution as DistributionTemplate } from '../types/templates'
 import { DistributionCreated } from '../types/StakingRewardsFactory/StakingRewardsFactory'
@@ -24,7 +24,7 @@ import {
   OwnershipTransferred,
   Recovered,
   Staked,
-  Withdrawn
+  Withdrawn,
 } from '../types/templates/Distribution/StakingRewardsDistribution'
 import {
   convertTokenToDecimal,
@@ -33,7 +33,7 @@ import {
   getOrCreateLiquidityMiningPosition,
   createLiquidityMiningSnapshot,
   getSwaprStakingRewardsFactory,
-  getOrCreateSingleSidedStakingCampaignPosition
+  getOrCreateSingleSidedStakingCampaignPosition,
 } from './helpers'
 import { isSwaprLPToken } from '../commons/addresses'
 import { createOrGetToken } from '../commons/token'
@@ -158,12 +158,12 @@ export function handleDistributionCancelation(event: Canceled): void {
   // Try to fetch LMCampaign, default back to SSSCampagin
   let lmCampaign = LiquidityMiningCampaign.load(campaignId)
   if (lmCampaign) {
-    store.remove("LiquidityMiningCampaign", campaignId)
+    store.remove('LiquidityMiningCampaign', campaignId)
     return
   }
   let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
   if (sssCampaign) {
-    store.remove("SingleSidedStakingCampaign", campaignId)
+    store.remove('SingleSidedStakingCampaign', campaignId)
     return
   }
 
@@ -313,8 +313,10 @@ export function handleClaim(event: Claimed): void {
     let claimedAmounts = event.params.amounts
     for (let i = 0; i < distributionRewards.length; i++) {
       let reward = SingleSidedStakingCampaignReward.load(distributionRewards[i])
-      let token = Token.load(reward.token) as Token
-      claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
+      if (reward) {
+        let token = Token.load(reward.token) as Token
+        claim.amounts.push(convertTokenToDecimal(claimedAmounts[i], token.decimals))
+      }
     }
     claim.save()
     return
@@ -348,8 +350,13 @@ export function handleRecovery(event: Recovered): void {
   for (let i = 0; i < distributionRewards.length; i++) {
     // Load the entity record from store and then get the token address to get decimal
     let reward = store.get(campaignEntityName, distributionRewards[i])
-    let token = Token.load(reward.get('token').toString()) as Token
-    recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
+    if (reward) {
+      let tokenId = reward.get('token')
+      if (tokenId) {
+        let token = Token.load(tokenId.toString()) as Token
+        recovery.amounts.push(convertTokenToDecimal(recoveredAmounts[i], token.decimals))
+      }
+    }
   }
   recovery.save()
 }

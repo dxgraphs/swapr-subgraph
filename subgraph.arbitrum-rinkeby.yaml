@@ -1,4 +1,4 @@
-specVersion: 0.0.2
+specVersion: 0.0.4
 description: Swapr is a decentralized protocol for automated token exchange on Ethereum.
 repository: https://github.com/nicoelzer/swapr-subgraph
 schema:
@@ -13,7 +13,7 @@ dataSources:
       startBlock: 217803
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mappings/factory.ts
       entities:
@@ -40,7 +40,7 @@ dataSources:
       startBlock: 337917
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mappings/staking-rewards.ts
       entities:
@@ -67,7 +67,7 @@ templates:
       abi: Pair
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mappings/core.ts
       entities:
@@ -96,7 +96,7 @@ templates:
       abi: StakingRewardsDistribution
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mappings/staking-rewards.ts
       entities:
