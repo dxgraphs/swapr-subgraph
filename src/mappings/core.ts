@@ -23,11 +23,7 @@ import { getBundle, getSwaprFactory } from './factory'
 function isCompleteMint(mintId: string): boolean {
   let mintEvent = MintEvent.load(mintId)
 
-  if (mintEvent && mintEvent.sender !== null) {
-    return true
-  }
-
-  return false
+  return mintEvent !== null && mintEvent.sender !== null
 }
 
 export function handleTransfer(event: Transfer): void {
