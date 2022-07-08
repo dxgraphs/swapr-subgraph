@@ -245,7 +245,7 @@ type Bundle @entity {
 
 # Daily unique users interactions
 type DailyUniqueAddressInteraction @entity {
-  id: ID! # timestamp rounded to current day by dividing by 86400
+  id: ID! # timestamp formatted as YYYY-MM-DD date string
 
   addresses: [Bytes!]!
 }
