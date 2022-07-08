@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log, BigInt, BigDecimal, Address, ethereum, dataSource } from '@graphprotocol/graph-ts'
+import { log, BigInt, BigDecimal, Address, ethereum, dataSource, Bytes } from '@graphprotocol/graph-ts'
 import { ERC20 } from '../types/Factory/ERC20'
 import { ERC20SymbolBytes } from '../types/Factory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../types/Factory/ERC20NameBytes'
@@ -14,11 +14,12 @@ import {
   LiquidityMiningPositionSnapshot,
   SingleSidedStakingCampaign,
   SingleSidedStakingCampaignPosition,
-  SwaprStakingRewardsFactory,
+  SwaprStakingRewardsFactory
 } from '../types/schema'
 import { Factory as FactoryContract } from '../types/templates/Pair/Factory'
 import { getFactoryAddress, getStakingRewardsFactoryAddress } from '../commons/addresses'
 import { getBundle } from './factory'
+import { updateDailyUniqueInteractions } from './dayUpdates'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -155,7 +156,10 @@ export function fetchTokenDecimals(tokenAddress: Address): BigInt {
 }
 
 export function createLiquidityPosition(exchange: Address, user: Address): LiquidityPosition {
-  let id = exchange.toHexString().concat('-').concat(user.toHexString())
+  let id = exchange
+    .toHexString()
+    .concat('-')
+    .concat(user.toHexString())
   let liquidityTokenBalance = LiquidityPosition.load(id)
   if (liquidityTokenBalance === null) {
     let pair = Pair.load(exchange.toHexString())
@@ -325,4 +329,20 @@ export function getSwaprStakingRewardsFactory(): SwaprStakingRewardsFactory {
   }
 
   return factory as SwaprStakingRewardsFactory
+}
+
+export function addDailyUniqueAddressInteraction(event: ethereum.Event, address: Bytes | null): void {
+  const dailyUniqueAddressInteractionsData = updateDailyUniqueInteractions(event)
+
+  if (!address) {
+    return
+  }
+
+  if (!dailyUniqueAddressInteractionsData.addresses.includes(address)) {
+    dailyUniqueAddressInteractionsData.addresses = dailyUniqueAddressInteractionsData.addresses.concat([
+      address as Bytes
+    ])
+
+    dailyUniqueAddressInteractionsData.save()
+  }
 }

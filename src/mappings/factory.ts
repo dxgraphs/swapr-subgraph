@@ -9,7 +9,7 @@ import {
   fetchTokenSymbol,
   fetchTokenName,
   fetchTokenDecimals,
-  fetchTokenTotalSupply,
+  fetchTokenTotalSupply
 } from './helpers'
 import { getFactoryAddress, getLiquidityTrackingTokenAddresses } from '../commons/addresses'
 

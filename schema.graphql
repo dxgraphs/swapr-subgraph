@@ -244,14 +244,10 @@ type Bundle @entity {
 }
 
 # Daily unique users interactions
-type DailyUniqueInteraction @entity {
+type DailyUniqueAddressInteraction @entity {
   id: ID! # timestamp rounded to current day by dividing by 86400
-  date: Int!
 
   addresses: [Bytes!]!
-  swaps: BigInt!
-  mints: BigInt!
-  burns: BigInt!
 }
 
 # Data accumulated and condensed into day stats for all of Swapr

@@ -1,13 +1,7 @@
 import { BigInt, BigDecimal, store, Address, log, Bytes } from '@graphprotocol/graph-ts'
 import { Pair, Token, Transaction, Mint as MintEvent, Burn as BurnEvent, Swap as SwapEvent } from '../types/schema'
 import { Mint, Burn, Swap, Transfer, Sync } from '../types/templates/Pair/Pair'
-import {
-  updatePairDayData,
-  updateTokenDayData,
-  updateSwaprDayData,
-  updatePairHourData,
-  updateUniqueDailyInteractions
-} from './dayUpdates'
+import { updatePairDayData, updateTokenDayData, updateSwaprDayData, updatePairHourData } from './dayUpdates'
 import {
   getNativeCurrencyPriceInUSD,
   findNativeCurrencyPerToken,
@@ -22,7 +16,8 @@ import {
   createLiquidityPosition,
   ZERO_BD,
   BI_18,
-  createLiquiditySnapshot
+  createLiquiditySnapshot,
+  addDailyUniqueAddressInteraction
 } from './helpers'
 import { getBundle, getSwaprFactory } from './factory'
 
@@ -360,16 +355,7 @@ export function handleMint(event: Mint): void {
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
 
-  // update unique day entity
-  let uniqueDailyInteractionsData = updateUniqueDailyInteractions(event)
-
-  // increment unique daily swaps
-  if (!uniqueDailyInteractionsData.addresses.includes(mint.to as Bytes)) {
-    uniqueDailyInteractionsData.addresses = uniqueDailyInteractionsData.addresses.concat([mint.to as Bytes])
-    uniqueDailyInteractionsData.mints = uniqueDailyInteractionsData.mints.plus(ONE_BI)
-
-    uniqueDailyInteractionsData.save()
-  }
+  addDailyUniqueAddressInteraction(event, mint.to)
 }
 
 export function handleBurn(event: Burn): void {
@@ -437,16 +423,7 @@ export function handleBurn(event: Burn): void {
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
 
-  // update unique day entity
-  let uniqueDailyInteractionsData = updateUniqueDailyInteractions(event)
-
-  // increment unique daily burns
-  if (!uniqueDailyInteractionsData.addresses.includes(burn.to as Bytes)) {
-    uniqueDailyInteractionsData.addresses = uniqueDailyInteractionsData.addresses.concat([burn.to as Bytes])
-    uniqueDailyInteractionsData.burns = uniqueDailyInteractionsData.burns.plus(ONE_BI)
-
-    uniqueDailyInteractionsData.save()
-  }
+  addDailyUniqueAddressInteraction(event, burn.to)
 }
 
 export function handleSwap(event: Swap): void {
@@ -607,13 +584,5 @@ export function handleSwap(event: Swap): void {
   token1DayData.save()
 
   // update unique day swaps
-  let uniqueDailyInteractionsData = updateUniqueDailyInteractions(event)
-
-  // increment unique daily swaps
-  if (!uniqueDailyInteractionsData.addresses.includes(swap.to as Bytes)) {
-    uniqueDailyInteractionsData.addresses = uniqueDailyInteractionsData.addresses.concat([swap.to as Bytes])
-    uniqueDailyInteractionsData.swaps = uniqueDailyInteractionsData.swaps.plus(ONE_BI)
-
-    uniqueDailyInteractionsData.save()
-  }
+  addDailyUniqueAddressInteraction(event, swap.from)
 }
