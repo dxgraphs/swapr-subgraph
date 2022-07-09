@@ -6,7 +6,7 @@ import {
   getNativeCurrencyPriceInUSD,
   findNativeCurrencyPerToken,
   getTrackedVolumeUSD,
-  getTrackedLiquidityUSD,
+  getTrackedLiquidityUSD
 } from './pricing'
 import {
   convertTokenToDecimal,
@@ -17,6 +17,7 @@ import {
   ZERO_BD,
   BI_18,
   createLiquiditySnapshot,
+  addDailyUniqueAddressInteraction
 } from './helpers'
 import { getBundle, getSwaprFactory } from './factory'
 
@@ -73,7 +74,10 @@ export function handleTransfer(event: Transfer): void {
     // create new mint if no mints so far or if last one is done already
     if (mints.length === 0 || isCompleteMint(mints[mints.length - 1])) {
       let mint = new MintEvent(
-        event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(mints.length).toString())
+        event.transaction.hash
+          .toHexString()
+          .concat('-')
+          .concat(BigInt.fromI32(mints.length).toString())
       )
       mint.transaction = transaction.id
       mint.pair = pair.id
@@ -96,7 +100,10 @@ export function handleTransfer(event: Transfer): void {
   if (event.params.to.toHexString() == pair.id) {
     let burns = transaction.burns
     let burn = new BurnEvent(
-      event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(burns.length).toString())
+      event.transaction.hash
+        .toHexString()
+        .concat('-')
+        .concat(BigInt.fromI32(burns.length).toString())
     )
     burn.transaction = transaction.id
     burn.pair = pair.id
@@ -129,7 +136,10 @@ export function handleTransfer(event: Transfer): void {
         burn = currentBurn as BurnEvent
       } else {
         burn = new BurnEvent(
-          event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(burns.length).toString())
+          event.transaction.hash
+            .toHexString()
+            .concat('-')
+            .concat(BigInt.fromI32(burns.length).toString())
         )
         burn.transaction = transaction.id
         burn.needsComplete = false
@@ -140,7 +150,10 @@ export function handleTransfer(event: Transfer): void {
       }
     } else {
       burn = new BurnEvent(
-        event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(burns.length).toString())
+        event.transaction.hash
+          .toHexString()
+          .concat('-')
+          .concat(BigInt.fromI32(burns.length).toString())
       )
       burn.transaction = transaction.id
       burn.needsComplete = false
@@ -341,6 +354,8 @@ export function handleMint(event: Mint): void {
 
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
+
+  addDailyUniqueAddressInteraction(event, mint.to)
 }
 
 export function handleBurn(event: Burn): void {
@@ -407,6 +422,8 @@ export function handleBurn(event: Burn): void {
 
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
+
+  addDailyUniqueAddressInteraction(event, burn.to)
 }
 
 export function handleSwap(event: Swap): void {
@@ -487,7 +504,10 @@ export function handleSwap(event: Swap): void {
   }
   let swaps = transaction.swaps
   let swap = new SwapEvent(
-    event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(swaps.length).toString())
+    event.transaction.hash
+      .toHexString()
+      .concat('-')
+      .concat(BigInt.fromI32(swaps.length).toString())
   )
 
   // update swap event
@@ -562,4 +582,7 @@ export function handleSwap(event: Swap): void {
     amount1Total.times(token1.derivedNativeCurrency as BigDecimal).times(bundle.nativeCurrencyPrice)
   )
   token1DayData.save()
+
+  // update unique day swaps
+  addDailyUniqueAddressInteraction(event, swap.from)
 }

@@ -243,6 +243,13 @@ type Bundle @entity {
   nativeCurrencyPrice: BigDecimal! # price of native currency usd
 }
 
+# Daily unique users interactions
+type DailyUniqueAddressInteraction @entity {
+  id: ID! # timestamp formatted as YYYY-MM-DD date string
+
+  addresses: [Bytes!]!
+}
+
 # Data accumulated and condensed into day stats for all of Swapr
 type SwaprDayData @entity {
   id: ID! # timestamp rounded to current day by dividing by 86400
