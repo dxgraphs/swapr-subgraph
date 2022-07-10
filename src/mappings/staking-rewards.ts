@@ -4,10 +4,10 @@ import {
   Pair,
   Token,
   LiquidityMiningCampaign,
-  Deposit,
-  Withdrawal,
-  Claim,
-  Recovery,
+  LiquidityMiningCampaignDeposit,
+  LiquidityMiningCampaignWithdrawal,
+  LiquidityMiningCampaignClaim,
+  LiquidityMiningCampaignRecovery,
   LiquidityMiningCampaignReward,
   SingleSidedStakingCampaign,
   SingleSidedStakingCampaignReward,
@@ -37,7 +37,6 @@ import {
 } from './helpers'
 import { isSwaprLPToken } from '../commons/addresses'
 import { createOrGetToken } from '../commons/token'
-import { getFirstFromAddressArray } from '../commons/helpers'
 
 export function handleDistributionCreation(event: DistributionCreated): void {
   let context = new DataSourceContext()
@@ -192,7 +191,7 @@ export function handleDeposit(event: Staked): void {
     createLiquidityMiningSnapshot(position, lmCampaign as LiquidityMiningCampaign, event)
 
     // populating the stake deposit entity
-    let deposit = new Deposit(event.transaction.hash.toHexString())
+    let deposit = new LiquidityMiningCampaignDeposit(event.transaction.hash.toHexString())
     deposit.liquidityMiningCampaign = lmCampaign.id
     deposit.user = event.params.staker
     deposit.timestamp = event.block.timestamp
@@ -247,7 +246,7 @@ export function handleWithdrawal(event: Withdrawn): void {
     position.stakedAmount = position.stakedAmount.minus(withdrawnAmount)
     createLiquidityMiningSnapshot(position, lmCampaign as LiquidityMiningCampaign, event)
     // populating the withdrawal entity
-    let withdrawal = new Withdrawal(event.transaction.hash.toHexString())
+    let withdrawal = new LiquidityMiningCampaignWithdrawal(event.transaction.hash.toHexString())
     withdrawal.liquidityMiningCampaign = campaignId
     withdrawal.user = event.params.withdrawer
     withdrawal.timestamp = event.block.timestamp
@@ -286,7 +285,7 @@ export function handleClaim(event: Claimed): void {
   let lmCampaign = LiquidityMiningCampaign.load(campaignId)
   let sssCampaign = SingleSidedStakingCampaign.load(campaignId)
   if (lmCampaign) {
-    let claim = new Claim(event.transaction.hash.toHexString())
+    let claim = new LiquidityMiningCampaignClaim(event.transaction.hash.toHexString())
     claim.amounts = []
     // refer to Liquidty Mining Campaign
     claim.liquidityMiningCampaign = lmCampaign.id
@@ -340,7 +339,7 @@ export function handleRecovery(event: Recovered): void {
   }
 
   // populating the recovery entity
-  let recovery = new Recovery(event.transaction.hash.toHexString())
+  let recovery = new LiquidityMiningCampaignRecovery(event.transaction.hash.toHexString())
   recovery.amounts = []
   recovery.liquidityMiningCampaign = lmCampaign.id
   recovery.timestamp = event.block.timestamp
