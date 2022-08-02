@@ -11,12 +11,14 @@
     "codegen:arbitrum-one": "graph codegen subgraph.arbitrum-one-old.yaml --output-dir src/types/",
     "codegen:arbitrum-one-v2": "graph codegen subgraph.arbitrum-one.yaml --output-dir src/types/",
     "codegen:arbitrum-rinkeby": "graph codegen subgraph.arbitrum-rinkeby.yaml --output-dir src/types/",
+    "codegen:arbitrum-goerli": "graph codegen subgraph.arbitrum-goerli.yaml --output-dir src/types/",
     "build:mainnet": "graph build subgraph.mainnet.yaml",
     "build:rinkeby": "graph build subgraph.rinkeby.yaml",
     "build:xdai": "graph build subgraph.xdai.yaml",
     "build:arbitrum-one": "graph build subgraph.arbitrum-one-old.yaml",
     "build:arbitrum-one-v2": "graph build subgraph.arbitrum-one.yaml",
     "build:arbitrum-rinkeby": "graph build subgraph.arbitrum-rinkeby.yaml",
+    "build:arbitrum-goerli": "graph build subgraph.arbitrum-goerli.yaml",
     "create-local": "graph create nicoelzer/swapr --node http://127.0.0.1:8020",
     "deploy-local:rinkeby": "graph deploy nicoelzer/swapr subgraph.rinkeby.yaml --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "deploy-local:mainnet": "graph deploy nicoelzer/swapr subgraph.rinkeby.yaml --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
@@ -29,7 +31,8 @@
     "deploy:arbitrum-one": "graph deploy luzzif/swapr-arbitrum-one subgraph.arbitrum-one-old.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
     "deploy:arbitrum-one-v2": "graph deploy luzzif/swapr-arbitrum-one-v2 subgraph.arbitrum-one.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
     "deploy:arbitrum-one-v3": "graph deploy luzzif/swapr-arbitrum-one-v3 subgraph.arbitrum-one.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
-    "deploy:arbitrum-rinkeby": "graph deploy luzzif/swapr-arbitrum-rinkeby-v2 subgraph.arbitrum-rinkeby.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug"
+    "deploy:arbitrum-rinkeby": "graph deploy luzzif/swapr-arbitrum-rinkeby-v2 subgraph.arbitrum-rinkeby.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
+    "deploy:arbitrum-goerli": "graph deploy dxgraphs/swapr-arbitrum-goerli subgraph.arbitrum-goerli.yaml --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.32.0",
