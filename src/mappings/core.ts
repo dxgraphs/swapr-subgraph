@@ -6,7 +6,7 @@ import {
   getNativeCurrencyPriceInUSD,
   findNativeCurrencyPerToken,
   getTrackedVolumeUSD,
-  getTrackedLiquidityUSD
+  getTrackedLiquidityUSD,
 } from './pricing'
 import {
   convertTokenToDecimal,
@@ -17,7 +17,7 @@ import {
   ZERO_BD,
   BI_18,
   createLiquiditySnapshot,
-  addDailyUniqueAddressInteraction
+  addDailyUniqueAddressInteraction,
 } from './helpers'
 import { getBundle, getSwaprFactory } from './factory'
 
@@ -33,7 +33,7 @@ export function handleTransfer(event: Transfer): void {
     return
   }
 
-  let factory = getSwaprFactory()
+  getSwaprFactory() // creates factory if it doesn't exist
   let transactionHash = event.transaction.hash.toHexString()
 
   // user stats
@@ -71,28 +71,22 @@ export function handleTransfer(event: Transfer): void {
     pair.totalSupply = pair.totalSupply.plus(value)
     pair.save()
 
-    // create new mint if no mints so far or if last one is done already
-    if (mints.length === 0 || isCompleteMint(mints[mints.length - 1])) {
-      let mint = new MintEvent(
-        event.transaction.hash
-          .toHexString()
-          .concat('-')
-          .concat(BigInt.fromI32(mints.length).toString())
-      )
-      mint.transaction = transaction.id
-      mint.pair = pair.id
-      mint.to = to
-      mint.liquidity = value
-      mint.timestamp = transaction.timestamp
-      mint.transaction = transaction.id
-      mint.save()
-
+    let mintEventId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
+    // create mint event if not already created
+    let mintEvent = MintEvent.load(mintEventId)
+    if (mintEvent === null) {
+      mintEvent = new MintEvent(mintEventId)
+      mintEvent.transaction = transaction.id
+      mintEvent.pair = pair.id
+      mintEvent.to = to
+      mintEvent.liquidity = value
+      mintEvent.timestamp = transaction.timestamp
+      mintEvent.transaction = transaction.id
+      mintEvent.save()
       // update mints in transaction
-      transaction.mints = mints.concat([mint.id])
-
+      transaction.mints = mints.concat([mintEvent.id])
       // save entities
       transaction.save()
-      factory.save()
     }
   }
 
@@ -100,10 +94,7 @@ export function handleTransfer(event: Transfer): void {
   if (event.params.to.toHexString() == pair.id) {
     let burns = transaction.burns
     let burn = new BurnEvent(
-      event.transaction.hash
-        .toHexString()
-        .concat('-')
-        .concat(BigInt.fromI32(burns.length).toString())
+      event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(burns.length).toString())
     )
     burn.transaction = transaction.id
     burn.pair = pair.id
@@ -136,10 +127,7 @@ export function handleTransfer(event: Transfer): void {
         burn = currentBurn as BurnEvent
       } else {
         burn = new BurnEvent(
-          event.transaction.hash
-            .toHexString()
-            .concat('-')
-            .concat(BigInt.fromI32(burns.length).toString())
+          event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(burns.length).toString())
         )
         burn.transaction = transaction.id
         burn.needsComplete = false
@@ -150,10 +138,7 @@ export function handleTransfer(event: Transfer): void {
       }
     } else {
       burn = new BurnEvent(
-        event.transaction.hash
-          .toHexString()
-          .concat('-')
-          .concat(BigInt.fromI32(burns.length).toString())
+        event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(burns.length).toString())
       )
       burn.transaction = transaction.id
       burn.needsComplete = false
@@ -294,8 +279,9 @@ export function handleMint(event: Mint): void {
     transaction.swaps = []
   }
 
-  let mints = transaction.mints
-  let mintId = mints[mints.length - 1]
+  // let mints = transaction.mints
+  // let mintId = mints[mints.length - 1]
+  let mintId = event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
   let mint = MintEvent.load(mintId)
 
   if (!mint) {
@@ -504,10 +490,7 @@ export function handleSwap(event: Swap): void {
   }
   let swaps = transaction.swaps
   let swap = new SwapEvent(
-    event.transaction.hash
-      .toHexString()
-      .concat('-')
-      .concat(BigInt.fromI32(swaps.length).toString())
+    event.transaction.hash.toHexString().concat('-').concat(BigInt.fromI32(swaps.length).toString())
   )
 
   // update swap event
