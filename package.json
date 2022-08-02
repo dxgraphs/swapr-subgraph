@@ -4,6 +4,7 @@
   "repository": "https://github.com/nicoelzer/swapr-subgraph",
   "license": "GPL-3.0-or-later",
   "scripts": {
+    "graph:auth": "npx graph auth https://api.thegraph.com/deploy/ -- ",
     "codegen:mainnet": "graph codegen subgraph.mainnet.yaml  --output-dir src/types/",
     "codegen:rinkeby": "graph codegen subgraph.rinkeby.yaml --output-dir src/types/",
     "codegen:xdai": "graph codegen subgraph.xdai.yaml --output-dir src/types/",
